@@ -1,0 +1,177 @@
+.responseMarkdown {
+  display: grid;
+  gap: 14px;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.responseMarkdown > * {
+  min-width: 0;
+}
+
+.responseMarkdown p,
+.responseMarkdown ul,
+.responseMarkdown ol,
+.responseMarkdown h1,
+.responseMarkdown h2,
+.responseMarkdown h3,
+.responseMarkdown h4,
+.responseMarkdown pre,
+.responseMarkdown blockquote,
+.responseMarkdown table {
+  margin: 0;
+}
+
+.responseMarkdown h1,
+.responseMarkdown h2,
+.responseMarkdown h3,
+.responseMarkdown h4 {
+  font-size: 17px;
+  line-height: 1.55;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.responseMarkdown h1,
+.responseMarkdown h2 {
+  padding-top: 6px;
+}
+
+.responseMarkdown p + p {
+  margin-top: -2px;
+}
+
+.responseMarkdown strong {
+  font-weight: 700;
+  color: var(--txt1);
+}
+
+.responseMarkdown ul,
+.responseMarkdown ol {
+  padding-left: 24px;
+  display: grid;
+  gap: 6px;
+}
+
+.responseMarkdown li {
+  padding-left: 4px;
+}
+
+.markdownLink {
+  color: color-mix(in srgb, var(--icon-c) 88%, var(--txt1));
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+  transition: color 120ms ease, text-decoration-color 120ms ease;
+}
+
+.markdownLink:hover {
+  color: var(--txt1);
+  text-decoration-color: currentColor;
+}
+
+.inlineCode {
+  padding: 2px 6px;
+  border-radius: 7px;
+  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
+  background: color-mix(in srgb, var(--surface-soft) 52%, var(--main-bg));
+  color: color-mix(in srgb, var(--danger) 72%, var(--txt1));
+  font-size: 0.92em;
+}
+
+.codeInlineBlock {
+  display: block;
+  min-width: max-content;
+}
+
+.blockquote {
+  padding: 12px 16px;
+  border-left: 3px solid color-mix(in srgb, var(--icon-c) 30%, transparent);
+  border-radius: 0 12px 12px 0;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--surface-soft) 50%, transparent) 0%, color-mix(in srgb, var(--hover) 30%, transparent) 100%);
+  color: var(--txt2);
+  font-style: italic;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin: 8px 0;
+}
+
+.blockquote > p {
+  margin: 0;
+}
+
+.blockquote > p + p {
+  margin-top: 8px;
+}
+
+.taskItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  list-style: none;
+  margin-left: -20px;
+}
+
+.taskCheckbox {
+  width: 16px;
+  height: 16px;
+  margin-top: 4px;
+  accent-color: var(--icon-c);
+  cursor: default;
+}
+
+.markdownRule {
+  height: 1px;
+  border: none;
+  background: color-mix(in srgb, var(--border) 88%, transparent);
+  margin: 4px 0;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  margin: 8px 0;
+}
+
+.markdownTable {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.markdownTh,
+.markdownTd {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.markdownTh {
+  color: var(--txt1);
+  font-weight: 600;
+  background: var(--surface-soft);
+  font-size: 13px;
+  letter-spacing: 0.01em;
+}
+
+.markdownTd {
+  color: var(--txt1);
+  background: var(--main-bg);
+}
+
+.markdownTable tr:last-child .markdownTd {
+  border-bottom: none;
+}
+
+.inlineMarkdownParagraph {
+  display: inline;
+  margin: 0;
+}
+
+.markdownParagraphBlock {
+  display: block;
+}

@@ -1,0 +1,23 @@
+.responseBlockContent {
+  min-width: 0;
+}
+
+.responseBodyText {
+  padding-left: 8px;
+  color: var(--txt1);
+  font-size: 16px;
+  line-height: 1.7;
+  min-width: 0;
+}
+
+.errorText {
+  color: var(--err, #ef4444);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.emptyResponseText {
+  color: var(--txt3);
+  font-size: 14px;
+  font-style: italic;
+}

@@ -1,0 +1,191 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  overflow-y: auto;
+  background: color-mix(in srgb, black 50%, transparent);
+  backdrop-filter: brightness(0.8);
+  animation: overlayIn 250ms ease-out;
+}
+
+@keyframes overlayIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.dialog {
+  width: min(100%, 768px);
+  display: flex;
+  flex-direction: column;
+  color: var(--txt1);
+  background: color-mix(in srgb, var(--surface-soft) 66%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
+  border-radius: 20px;
+  box-shadow: 0 20px 56px color-mix(in srgb, black 22%, transparent);
+  animation: dialogIn 250ms ease-out;
+}
+
+@keyframes dialogIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.header {
+  padding: 20px 20px 0;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--txt1);
+}
+
+.description {
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--txt2);
+}
+
+.body {
+  padding: 14px 20px 0;
+}
+
+.textareaWrap {
+  position: relative;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 220px;
+  max-height: 320px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--txt1);
+  font-size: 14px;
+  line-height: 1.5;
+  font-family: inherit;
+  resize: none;
+  outline: none;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--txt3) 80%, transparent) transparent;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.textarea:focus {
+  border-color: color-mix(in srgb, var(--border) 100%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--icon-c) 10%, transparent);
+}
+
+.textarea::placeholder {
+  color: var(--txt3);
+}
+
+.textarea:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+.textareaPlaceholder {
+  position: absolute;
+  inset: 0;
+  padding: 14px;
+  pointer-events: none;
+  color: var(--txt3);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.textareaPlaceholderText {
+  position: absolute;
+  max-width: calc(100% - 28px);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.textareaPlaceholderTextVisible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.textarea::-webkit-scrollbar {
+  width: 4px;
+}
+
+.textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.textarea::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--txt3) 72%, transparent);
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 20px 20px;
+}
+
+.secondaryBtn,
+.primaryBtn {
+  height: 36px;
+  min-width: 84px;
+  padding: 0 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.secondaryBtn {
+  color: var(--txt2);
+  border: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
+  background: transparent;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.secondaryBtn:hover {
+  background: var(--hover);
+  color: var(--txt1);
+}
+
+.secondaryBtn:disabled,
+.primaryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.primaryBtn {
+  color: var(--btn-text);
+  background: var(--icon-c);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.primaryBtn:hover {
+  opacity: 0.92;
+}
+
+.primaryBtn:active {
+  transform: scale(0.985);
+}

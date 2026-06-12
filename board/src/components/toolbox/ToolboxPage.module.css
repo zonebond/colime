@@ -1,0 +1,119 @@
+.page {
+  flex: 1 1 0%;
+  height: 100%;
+  align-self: stretch;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+}
+
+.navPanel {
+  width: 200px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  background: var(--surface-soft);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px 0;
+}
+
+.navPanel::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.navScroll {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 8px;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--txt2);
+  font-size: 14px;
+  font-weight: 450;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 150ms var(--ease-smooth), color 150ms var(--ease-smooth);
+  text-align: left;
+}
+
+.navItem:hover {
+  background: var(--hover);
+}
+
+.navItemActive {
+  background: color-mix(in srgb, var(--icon-c) 8%, transparent);
+  color: var(--icon-c);
+  font-weight: 500;
+}
+
+.navLabel {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contentArea {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.contentArea::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+@media (max-width: 768px) {
+  .page {
+    flex-direction: column;
+  }
+
+  .navPanel {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 8px 0;
+    max-height: 120px;
+  }
+
+  .navScroll {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 0 12px;
+  }
+
+  .navItem {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .navSubList {
+    display: none;
+  }
+
+  .navGroup {
+    flex-direction: row;
+  }
+
+  .contentArea {
+    overflow-y: auto;
+  }
+}

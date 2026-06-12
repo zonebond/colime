@@ -1,0 +1,35 @@
+.diagnostics {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.diagnosticItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--hover);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.label {
+  flex: 0 0 auto;
+  font-weight: 600;
+  color: #ef4444;
+}
+
+.location {
+  flex: 0 0 auto;
+  color: var(--txt3);
+  font-family: var(--monospace);
+}
+
+.message {
+  flex: 1 1 auto;
+  color: var(--txt2);
+  word-break: break-word;
+}

@@ -1,0 +1,43 @@
+.collapsibleWrap {
+  position: relative;
+}
+
+.collapsibleContent {
+  overflow: hidden;
+  transition: max-height 300ms ease;
+}
+
+.collapsed {
+  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+}
+
+.collapsibleGradient {
+  position: absolute;
+  bottom: 32px;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: linear-gradient(to bottom, transparent, var(--main-bg));
+  pointer-events: none;
+  z-index: 1;
+}
+
+.collapsibleToggle {
+  display: block;
+  margin: 6px auto 0;
+  padding: 4px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--txt2);
+  background: color-mix(in srgb, var(--hover) 50%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.collapsibleToggle:hover {
+  color: var(--txt1);
+  background: color-mix(in srgb, var(--hover) 80%, transparent);
+}

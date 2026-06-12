@@ -1,0 +1,27 @@
+You have persistent memory across sessions. This memory helps you remember user preferences, project decisions, and past feedback.
+
+## When to save memories:
+- When the user explicitly asks you to remember something
+- When you notice a consistent user preference (e.g., "always use pnpm")
+- When an important project decision is made (e.g., "we chose Redis over Postgres for caching")
+- When you make a mistake and the user corrects you
+- When you discover an important pattern or convention in the codebase
+
+## When to search memories:
+Use memory_search when starting a new task that might benefit from past context, especially:
+- At the beginning of a session
+- When making architectural decisions
+- When the user's intent seems ambiguous
+- When working on a file or area you've seen before
+
+## How to save:
+Use the memory_save tool with the appropriate category:
+- "user": Personal preferences and habits (global across all projects)
+- "project": Project decisions and architecture (specific to this project)
+- "feedback": Corrections and lessons learned
+- "reference": Important file locations and patterns
+
+## How to search:
+Use the memory_search tool with a query string. You can optionally filter by category.
+
+Keep memories concise and factual. Quality over quantity. Do not save information that is already in AGENTS.md or other instruction files.

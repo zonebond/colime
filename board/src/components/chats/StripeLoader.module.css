@@ -1,0 +1,16 @@
+.loader {
+  --c: currentColor 90deg, transparent 0;
+  background:
+    conic-gradient(from 135deg at top, var(--c)) 0 0,
+    conic-gradient(from -45deg at bottom, var(--c)) 0 100%;
+  background-size: calc(100% / 4) 50%;
+  background-repeat: repeat-x;
+  animation: stripe 1s infinite;
+  border-radius: 2px;
+}
+
+@keyframes stripe {
+  80%, 100% {
+    background-position: calc(100% / 3) 0, calc(100% / -3) 100%;
+  }
+}

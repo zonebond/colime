@@ -1,0 +1,152 @@
+import { ProviderAuth } from "@/provider/auth"
+import { Provider } from "@/provider/provider"
+import { ProviderID } from "@/provider/schema"
+import { Schema } from "effect"
+import { HttpApi, HttpApiEndpoint, HttpApiError, HttpApiGroup, OpenApi } from "effect/unstable/httpapi"
+import { Authorization } from "../middleware/authorization"
+import { InstanceContextMiddleware } from "../middleware/instance-context"
+import { WorkspaceRoutingMiddleware, WorkspaceRoutingQuery } from "../middleware/workspace-routing"
+import { described } from "./metadata"
+
+const root = "/provider"
+
+const ModelInput = Schema.Union([
+  Schema.String,
+  Schema.Struct({ id: Schema.String, name: Schema.optional(Schema.String) }),
+])
+
+const CreateProviderInput = Schema.Struct({
+  type: Schema.String,
+  name: Schema.optional(Schema.String),
+  baseUrl: Schema.optional(Schema.String),
+  apiKey: Schema.optional(Schema.String),
+  models: Schema.optional(Schema.Array(ModelInput)),
+  description: Schema.optional(Schema.String),
+})
+
+const UpdateProviderInput = Schema.Struct({
+  type: Schema.optional(Schema.String),
+  name: Schema.optional(Schema.String),
+  baseUrl: Schema.optional(Schema.String),
+  apiKey: Schema.optional(Schema.String),
+  models: Schema.optional(Schema.Array(ModelInput)),
+  description: Schema.optional(Schema.String),
+})
+
+export const ProviderApi = HttpApi.make("provider")
+  .add(
+    HttpApiGroup.make("provider")
+      .add(
+        HttpApiEndpoint.get("list", root, {
+          query: WorkspaceRoutingQuery,
+          success: described(Provider.ListResult, "List of providers"),
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "provider.list",
+            summary: "List providers",
+            description: "Get a list of all available AI providers, including both available and connected ones.",
+          }),
+        ),
+        HttpApiEndpoint.post("create", root, {
+          query: WorkspaceRoutingQuery,
+          payload: CreateProviderInput,
+          success: Schema.Record(Schema.String, Schema.Unknown),
+          error: HttpApiError.BadRequest,
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "provider.create",
+            summary: "Create provider",
+            description: "Create a new provider configuration.",
+          }),
+        ),
+        HttpApiEndpoint.patch("update", `${root}/:providerID`, {
+          params: { providerID: ProviderID },
+          query: WorkspaceRoutingQuery,
+          payload: UpdateProviderInput,
+          success: Schema.Record(Schema.String, Schema.Unknown),
+          error: [HttpApiError.BadRequest, HttpApiError.NotFound],
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "provider.update",
+            summary: "Update provider",
+            description: "Update an existing provider configuration.",
+          }),
+        ),
+        HttpApiEndpoint.delete("delete", `${root}/:providerID`, {
+          params: { providerID: ProviderID },
+          query: WorkspaceRoutingQuery,
+          success: Schema.Record(Schema.String, Schema.Unknown),
+          error: [HttpApiError.BadRequest, HttpApiError.NotFound],
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "provider.delete",
+            summary: "Delete provider",
+            description: "Delete a provider configuration.",
+          }),
+        ),
+        HttpApiEndpoint.post("test", `${root}/:providerID/test`, {
+          params: { providerID: ProviderID },
+          query: WorkspaceRoutingQuery,
+          success: Schema.Record(Schema.String, Schema.Unknown),
+          error: HttpApiError.BadRequest,
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "provider.test",
+            summary: "Test provider connection",
+            description: "Test connectivity to a provider by making a request to its base URL.",
+          }),
+        ),
+        HttpApiEndpoint.get("auth", `${root}/auth`, {
+          query: WorkspaceRoutingQuery,
+          success: described(ProviderAuth.Methods, "Provider auth methods"),
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "provider.auth",
+            summary: "Get provider auth methods",
+            description: "Retrieve available authentication methods for all AI providers.",
+          }),
+        ),
+        HttpApiEndpoint.post("authorize", `${root}/:providerID/oauth/authorize`, {
+          params: { providerID: ProviderID },
+          query: WorkspaceRoutingQuery,
+          payload: ProviderAuth.AuthorizeInput,
+          success: described(Schema.UndefinedOr(ProviderAuth.Authorization), "Authorization URL and method"),
+          error: HttpApiError.BadRequest,
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "provider.oauth.authorize",
+            summary: "Start OAuth authorization",
+            description: "Start the OAuth authorization flow for a provider.",
+          }),
+        ),
+        HttpApiEndpoint.post("callback", `${root}/:providerID/oauth/callback`, {
+          params: { providerID: ProviderID },
+          query: WorkspaceRoutingQuery,
+          payload: ProviderAuth.CallbackInput,
+          success: described(Schema.Boolean, "OAuth callback processed successfully"),
+          error: HttpApiError.BadRequest,
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "provider.oauth.callback",
+            summary: "Handle OAuth callback",
+            description: "Handle the OAuth callback from a provider after user authorization.",
+          }),
+        ),
+      )
+      .annotateMerge(
+        OpenApi.annotations({
+          title: "provider",
+          description: "Experimental HttpApi provider routes.",
+        }),
+      )
+      .middleware(InstanceContextMiddleware)
+      .middleware(WorkspaceRoutingMiddleware)
+      .middleware(Authorization),
+  )
+  .annotateMerge(
+    OpenApi.annotations({
+      title: "ravens experimental HttpApi",
+      version: "0.0.1",
+      description: "Experimental HttpApi surface for selected instance routes.",
+    }),
+  )

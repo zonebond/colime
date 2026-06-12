@@ -1,0 +1,217 @@
+.wrapper {
+  margin-top: 4px;
+}
+
+.fallback {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--radius-md, 6px);
+  background: var(--surface-base, rgba(0,0,0,0.02));
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--txt2);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.bashHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-md, 6px) var(--radius-md, 6px) 0 0;
+  background: color-mix(in srgb, #f59e0b 8%, transparent);
+  border: 1px solid color-mix(in srgb, #f59e0b 15%, transparent);
+  border-bottom: none;
+}
+
+.bashCommand {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--txt2);
+}
+
+.action {
+  font-size: 12px;
+  font-weight: 500;
+  color: #3b82f6;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.qaList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.qaItem {
+  padding: 8px 10px;
+  border-radius: var(--radius-md, 6px);
+  background: color-mix(in srgb, #f59e0b 6%, transparent);
+  border: 1px solid color-mix(in srgb, #f59e0b 12%, transparent);
+}
+
+.qaQuestion {
+  font-size: 11px;
+  font-weight: 500;
+  color: #b45309;
+  margin-bottom: 2px;
+}
+
+.qaAnswer {
+  font-size: 13px;
+  color: var(--txt1);
+}
+
+.qaNoAnswer {
+  color: var(--txt3);
+  font-style: italic;
+}
+
+.websearchOutput {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.websearchUrls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.websearchLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--txt3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.websearchLink {
+  font-size: 12px;
+  color: var(--txt-link);
+  text-decoration: none;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--txt-link) 8%, transparent);
+  transition: background 120ms ease;
+}
+
+.websearchLink:hover {
+  background: color-mix(in srgb, var(--txt-link) 16%, transparent);
+  text-decoration: underline;
+}
+
+.loadedFiles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: color-mix(in srgb, #22a552 6%, transparent);
+  border: 1px solid color-mix(in srgb, #22a552 12%, transparent);
+}
+
+.loadedLabel {
+  font-size: 11px;
+  font-weight: 500;
+  color: #22a552;
+  margin-right: 4px;
+}
+
+.loadedFile {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--txt2);
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--txt2) 8%, transparent);
+}
+
+/* ─── webfetch ─── */
+
+.webfetchUrl {
+  display: flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-md, 6px) var(--radius-md, 6px) 0 0;
+  background: color-mix(in srgb, #3b82f6 8%, transparent);
+  border: 1px solid color-mix(in srgb, #3b82f6 15%, transparent);
+  border-bottom: none;
+}
+
+.webfetchLink {
+  font-size: 12px;
+  color: var(--txt-link);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.webfetchLink:hover {
+  text-decoration: underline;
+}
+
+/* ─── skill ─── */
+
+.skillHeader {
+  display: flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-md, 6px) var(--radius-md, 6px) 0 0;
+  background: color-mix(in srgb, #8b5cf6 8%, transparent);
+  border: 1px solid color-mix(in srgb, #8b5cf6 15%, transparent);
+  border-bottom: none;
+}
+
+.skillLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--txt1);
+}
+
+/* ─── task ─── */
+
+.taskHeader {
+  display: flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-md, 6px) var(--radius-md, 6px) 0 0;
+  background: color-mix(in srgb, #ec4899 8%, transparent);
+  border: 1px solid color-mix(in srgb, #ec4899 15%, transparent);
+  border-bottom: none;
+}
+
+.taskLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--txt1);
+}
+
+/* ─── lsp ─── */
+
+.lspHeader {
+  display: flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-md, 6px) var(--radius-md, 6px) 0 0;
+  background: color-mix(in srgb, #8b5cf6 8%, transparent);
+  border: 1px solid color-mix(in srgb, #8b5cf6 15%, transparent);
+  border-bottom: none;
+}
+
+.lspLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--txt1);
+}

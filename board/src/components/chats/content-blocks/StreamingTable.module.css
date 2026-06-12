@@ -1,0 +1,85 @@
+.tableWrapper {
+  margin: 12px 0;
+}
+
+.tablePreamble {
+  margin-bottom: 8px;
+  color: var(--txt2);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.streamingTable {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin: 12px 0;
+}
+
+.streamingTableHeader {
+  display: table-header-group;
+}
+
+.streamingTableHeaderRow {
+  display: table-row;
+  background: var(--bg2);
+}
+
+.streamingTableHeaderCell {
+  display: table-cell;
+  padding: 10px 14px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--txt1);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.streamingTableBody {
+  display: table-row-group;
+}
+
+.streamingTableRow {
+  display: table-row;
+}
+
+.streamingTableRow:nth-child(even) {
+  background: var(--bg1);
+}
+
+.rowNew {
+  animation: tableRowFadeIn 0.4s ease-out both;
+}
+
+.streamingTableCell {
+  display: table-cell;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: var(--txt1);
+  border-bottom: 1px solid var(--border);
+}
+
+.streamingTableRow:last-child .streamingTableCell {
+  border-bottom: none;
+}
+
+@keyframes tableRowFadeIn {
+  0% {
+    opacity: 0;
+    background: rgba(124, 58, 237, 0.15);
+  }
+  30% {
+    background: rgba(124, 58, 237, 0.1);
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.responseMarkdownInlineTail {
+  display: inline;
+  white-space: inherit;
+}

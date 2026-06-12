@@ -1,0 +1,26 @@
+.title {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.swap {
+  display: inline-grid;
+  overflow: hidden;
+  transition: width 480ms cubic-bezier(0.22, 1, 0.36, 1);
+  white-space: nowrap;
+
+  & > * {
+    grid-area: 1 / 1;
+  }
+}
+
+.stateText {
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swap {
+    transition: none;
+  }
+}

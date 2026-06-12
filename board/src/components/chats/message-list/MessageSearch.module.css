@@ -1,0 +1,50 @@
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  color: var(--txt2);
+}
+
+.searchInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--txt1);
+  font-size: 13px;
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--txt3);
+}
+
+.searchCount {
+  font-size: 11px;
+  color: var(--txt3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.searchClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--txt3);
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.searchClose:hover {
+  background: var(--hover);
+  color: var(--txt1);
+}

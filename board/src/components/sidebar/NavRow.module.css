@@ -1,0 +1,230 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 36px;
+  padding: 7px 8px;
+  border-radius: 9px;
+  width: 100%;
+  text-align: left;
+  color: var(--txt1);
+  background: none;
+  border: none;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  position: relative;
+  overflow: visible;
+  transition: background 0.12s;
+}
+
+.row:hover { background: var(--hover); }
+.row.active { background: var(--active); }
+
+/* Icon */
+.icon {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--icon-c);
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), color 0.16s ease;
+}
+
+.icon svg {
+  width: 19px;
+  height: 19px;
+  display: block;
+  transform-origin: center;
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.row:hover .icon {
+  transform: translateY(-0.5px);
+  color: var(--icon-c);
+}
+
+.row:hover .icon svg {
+  transform: rotate(-4deg) scale(1.07);
+}
+
+.row.active .icon {
+  color: var(--icon-c);
+}
+
+.row:hover .icon svg {
+  transform: rotate(-4deg) scale(1.07);
+}
+
+.row.active .icon {
+  color: var(--icon-c);
+}
+
+.row.active .icon svg {
+  transform: scale(1.02);
+}
+
+.row:active .icon {
+  transform: translateY(0);
+}
+
+.row:active .icon svg {
+  transform: rotate(3deg) scale(0.98);
+}
+
+.row:nth-of-type(2):hover .icon svg {
+  transform: rotate(3deg) scale(1.06);
+}
+
+.row:nth-of-type(3):hover .icon svg {
+  transform: rotate(-2deg) scale(1.05);
+}
+
+.row[data-nav="search"]:hover .icon svg {
+  transform: translate(1px, -0.5px) rotate(6deg) scale(1.08);
+}
+
+.row[data-nav="new-chat"]:hover .icon,
+.row[data-nav="new-chat"]:active .icon {
+  transform: none;
+}
+
+.row[data-nav="new-chat"]:hover .icon svg,
+.row[data-nav="new-chat"]:active .icon svg,
+.row[data-nav="new-chat"].active .icon svg {
+  transform: none;
+}
+
+.row[data-nav="toolbox"]:hover .icon svg {
+  transform: rotate(-3deg) translateY(-0.5px) scale(1.06);
+}
+
+.row[data-nav="chats"]:hover .icon svg {
+  transform: translateX(-0.5px) rotate(-3deg) scale(1.05);
+}
+
+.row[data-nav="projects"]:hover .icon svg {
+  transform: translateY(-1px) rotate(3deg) scale(1.06);
+}
+
+.row[data-nav="tasks"]:hover .icon svg {
+  transform: rotate(8deg) scale(1.07);
+}
+
+.row[data-nav="library"]:hover .icon svg {
+  transform: translateY(-1px) rotate(-2deg) scale(1.05);
+}
+
+.row[data-nav="search"]:active .icon svg {
+  transform: translate(0, 0) rotate(-2deg) scale(0.98);
+}
+
+.row[data-nav="toolbox"]:active .icon svg {
+  transform: rotate(2deg) scale(0.985);
+}
+
+.row[data-nav="chats"]:active .icon svg {
+  transform: translateX(0.5px) rotate(2deg) scale(0.985);
+}
+
+.row[data-nav="projects"]:active .icon svg {
+  transform: translateY(0) rotate(-2deg) scale(0.985);
+}
+
+.row[data-nav="tasks"]:active .icon svg {
+  transform: rotate(-4deg) scale(0.98);
+}
+
+.row[data-nav="library"]:active .icon svg {
+  transform: translateY(0) rotate(1deg) scale(0.985);
+}
+
+/* Label */
+.label {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.2;
+  color: inherit;
+  letter-spacing: -0.01em;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition:
+    max-width 0.16s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.15s ease,
+    transform 0.15s ease;
+  transition-delay: 0.08s;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+:global([lang="zh"]) .label {
+  font-size: 13px;
+  letter-spacing: 0.01em;
+}
+
+.labelHidden {
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(-2px);
+  pointer-events: none;
+  transition-delay: 0s;
+}
+
+/* Extras (chevron, badge, etc.) */
+.extras {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition-delay: 0.08s;
+  transform: translateX(0);
+}
+
+.extrasHidden {
+  opacity: 0;
+  transform: translateX(-2px);
+  pointer-events: none;
+  transition-delay: 0s;
+}
+
+/* Tooltip — shown only when sidebar is closed */
+.tooltip {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%) translateX(-2px) scale(0.93);
+  background: var(--tip-bg);
+  color: var(--tip-c);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 4px 9px;
+  border-radius: 7px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.13s, transform 0.13s;
+  z-index: 300;
+}
+
+.row:hover .tooltip {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0) scale(1);
+}
+
+.shortcut {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  color: var(--shortcut-c);
+  font-size: 12px;
+  letter-spacing: 0.01em;
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+}

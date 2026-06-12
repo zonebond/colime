@@ -1,0 +1,68 @@
+.layout {
+  display: flex;
+  height: 100vh;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.main {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  background: var(--main-bg);
+  padding: 0;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.main > * {
+  min-width: 0;
+  min-height: 0;
+}
+
+.pageContent {
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 0;
+  width: 100%;
+}
+
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: var(--txt3);
+  font-size: 13px;
+  text-align: center;
+  opacity: 0.72;
+}
+
+.placeholder svg {
+  width: 28px;
+  height: 28px;
+}
+
+.routeFallback {
+  width: min(100%, 768px);
+  margin: 48px auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0 16px;
+}
+
+.routeFallbackTitle {
+  width: 220px;
+  height: 28px;
+  border-radius: 10px;
+}
+
+.routeFallbackBody {
+  width: 100%;
+  height: 240px;
+  border-radius: 18px;
+}

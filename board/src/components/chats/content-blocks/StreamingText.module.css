@@ -1,0 +1,27 @@
+.charAnimated {
+  display: inline;
+  animation: charFadeIn 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+  text-shadow: 0 0 16px var(--accent);
+}
+
+@keyframes charFadeIn {
+  0% {
+    opacity: 0.1;
+    color: var(--accent);
+    filter: brightness(4) saturate(3) blur(0.5px);
+    transform: translateY(0.25em) scale(1.06);
+    text-shadow: 0 0 20px var(--accent), 0 0 40px var(--accent), 0 0 60px var(--accent), 0 0 80px var(--accent);
+  }
+  25% {
+    opacity: 0.95;
+    filter: brightness(2.2) saturate(2);
+    text-shadow: 0 0 14px var(--accent), 0 0 28px var(--accent);
+  }
+  100% {
+    opacity: 1;
+    color: inherit;
+    filter: brightness(1) saturate(1) blur(0);
+    transform: translateY(0) scale(1);
+    text-shadow: none;
+  }
+}

@@ -1,0 +1,539 @@
+/* ─── card shell ─── */
+
+.card {
+  display: grid;
+  gap: 0;
+  border-radius: 6px;
+  animation: fadeIn 300ms ease both;
+}
+
+/* Wraps body + progress to clip border-radius without trapping sticky */
+.contentClip {
+  overflow: clip;
+  border-radius: 0 0 6px 6px;
+}
+
+/* ─── state variants ─── */
+
+.stateRunning {
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+.stateConfirm {
+  background: color-mix(in srgb, #f59e0b 5%, transparent);
+}
+
+.stateError {
+  background: color-mix(in srgb, #ef4444 5%, transparent);
+}
+
+.stateDeduped {
+  opacity: 0.7;
+}
+
+.stateCircuitOpen {
+  border-left: 2px solid #ef4444;
+}
+
+.stateCircuitHalf {
+  border-left: 2px solid #f97316;
+}
+
+.stage {
+  border-radius: 4px;
+  background: transparent;
+}
+
+/* ─── trigger button ─── */
+
+.trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background 150ms ease;
+  overflow: hidden;
+}
+
+.trigger:hover {
+  background: var(--hover);
+}
+
+.triggerSticky {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--main-bg);
+}
+
+.triggerSticky:hover {
+  background: color-mix(in srgb, var(--main-bg) 96%, var(--txt1) 4%);
+}
+
+/* ─── trigger left side ─── */
+
+.triggerContent {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.triggerIcon {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--txt3);
+}
+
+.toolIcon {
+  flex-shrink: 0;
+  color: var(--txt3);
+}
+
+.errorIcon {
+  flex-shrink: 0;
+  color: var(--err, #ef4444);
+}
+
+/* ─── trigger info ─── */
+
+.triggerInfo {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.triggerMain {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.triggerTitle {
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 14px;
+  color: var(--txt1);
+}
+
+.triggerSubtitle {
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 14px;
+  color: var(--txt2);
+}
+
+.triggerArg {
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 14px;
+  color: var(--txt2);
+}
+
+/* ─── trigger right side (meta + caret) ─── */
+
+.triggerMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.metaText {
+  font-size: 11px;
+  color: var(--txt3);
+  font-variant-numeric: tabular-nums;
+}
+
+.metaRunning {
+  color: var(--accent);
+}
+
+.metaError {
+  color: #ef4444;
+}
+
+/* ─── file card elements ─── */
+
+.fileCardIcon {
+  flex-shrink: 0;
+  color: var(--txt3);
+  display: flex;
+  align-items: center;
+  margin-right: -2px;
+}
+
+.fileStats {
+  font-size: 11px;
+  color: var(--txt3);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ─── inline download ─── */
+
+.inlineDownload {
+  flex-shrink: 0;
+  color: var(--txt3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 150ms ease, background 150ms ease;
+}
+
+.inlineDownload:hover {
+  color: var(--txt1);
+  background: var(--hover);
+}
+
+/* ─── caret ─── */
+
+.caret {
+  flex-shrink: 0;
+  color: var(--txt3);
+  transform: rotate(-90deg);
+  transition: transform 200ms ease;
+}
+
+.caretExpanded {
+  transform: rotate(0deg);
+}
+
+/* ─── status icons (post-run) ─── */
+
+.statusDone {
+  color: #2e8a4c;
+}
+
+.statusError {
+  color: #ef4444;
+}
+
+.statusDeduped {
+  color: var(--txt3);
+}
+
+.statusHalf {
+  color: #f97316;
+}
+
+/* ─── spinner ─── */
+
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 1.5px solid color-mix(in srgb, var(--txt3) 30%, transparent);
+  border-top-color: var(--accent);
+  animation: spin 800ms linear infinite;
+  flex-shrink: 0;
+}
+
+/* ─── expandable body ─── */
+
+.body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  min-height: 0;
+}
+
+.bodyExpanded {
+  grid-template-rows: 1fr;
+}
+
+.bodyInner {
+  overflow: hidden;
+}
+
+/* ─── content (input / output) ─── */
+
+.content {
+  display: grid;
+  gap: 4px;
+  padding: 0 10px 10px 34px;
+}
+
+.input {
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: var(--txt3);
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding: 8px 10px;
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+  border-radius: 6px;
+  line-height: 1.5;
+}
+
+.output {
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: var(--txt2);
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding: 8px 10px;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  border-radius: 6px;
+  line-height: 1.5;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.outputError {
+  border-left: 2px solid #ef4444;
+}
+
+/* ─── confirm actions ─── */
+
+.confirmActions {
+  display: flex;
+  gap: 8px;
+  padding: 0 10px 10px 34px;
+}
+
+.denyBtn,
+.allowBtn {
+  flex: 1;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.denyBtn {
+  background: transparent;
+  color: var(--txt2);
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+}
+
+.denyBtn:hover {
+  background: var(--hover);
+  color: var(--txt1);
+}
+
+.allowBtn {
+  background: var(--primary, var(--accent));
+  color: white;
+  border: none;
+}
+
+.allowBtn:hover {
+  opacity: 0.9;
+}
+
+/* ─── retry ─── */
+
+.retryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: 500;
+  color: var(--txt2);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.retryBtn:hover {
+  background: var(--hover);
+  color: var(--txt1);
+  border-color: var(--border);
+}
+
+/* ─── progress bar ─── */
+
+.progressWrap {
+  padding: 0 10px 6px 34px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 0;
+}
+
+.progressTrack {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--border) 30%, transparent);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 300ms ease;
+}
+
+.progressMsg {
+  font-size: 11px;
+  color: var(--txt3);
+  line-height: 1.4;
+}
+
+/* ─── animated subtitle (shell submessage) ─── */
+
+.subtitleAnimated {
+  animation: submessagePulse 2s ease-in-out infinite;
+}
+
+/* Entry animation: width reveal + opacity fade + blur settle */
+[data-sub-animate] {
+  overflow: hidden;
+  animation: shellSubReveal 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+[data-sub-animate] .subtitleValue {
+  white-space: nowrap;
+  animation: shellSubFade 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ─── clickable subtitle link ─── */
+
+.subtitleLink {
+  white-space: nowrap;
+  color: var(--txt-link, #3b82f6);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.subtitleLink:hover {
+  text-decoration: underline;
+}
+
+/* ─── subagent drill-down ─── */
+
+.subagentDrilldownRow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-top: 6px;
+  padding-left: 10px;
+}
+
+.subagentDrilldownIcon {
+  width: 16px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--txt3);
+  margin-right: 8px;
+}
+
+.subagentDrilldown {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 20px;
+  border-radius: 5px;
+  border: 1px solid color-mix(in srgb, #3b82f6 18%, transparent);
+  cursor: pointer;
+  background: color-mix(in srgb, #3b82f6 6%, transparent);
+  color: #3b82f6;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.subagentDrilldown:hover {
+  background: color-mix(in srgb, #3b82f6 14%, transparent);
+  border-color: color-mix(in srgb, #3b82f6 30%, transparent);
+}
+
+.subagentDrilldownGo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 0;
+  overflow: hidden;
+  opacity: 0;
+  color: #3b82f6;
+  transition: width 200ms ease, opacity 200ms ease, margin 200ms ease;
+}
+
+.subagentDrilldown:hover .subagentDrilldownGo {
+  width: 14px;
+  opacity: 1;
+  margin-left: 2px;
+}
+
+/* ─── keyframes ─── */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes submessagePulse {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1; }
+}
+
+@keyframes shellSubReveal {
+  from { max-width: 0; }
+  to   { max-width: 600px; }
+}
+
+@keyframes shellSubFade {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0px);
+  }
+}

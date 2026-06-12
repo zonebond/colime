@@ -1,0 +1,101 @@
+.card {
+  border-radius: 6px;
+  background: color-mix(in srgb, #ef4444 5%, transparent);
+  border: 1px solid color-mix(in srgb, #ef4444 15%, transparent);
+  overflow: hidden;
+}
+
+.trigger {
+  width: 100%;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background 150ms ease;
+}
+
+.trigger:hover {
+  background: color-mix(in srgb, var(--hover) 40%, transparent);
+}
+
+.icon {
+  flex-shrink: 0;
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+}
+
+.title {
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 14px;
+  color: var(--txt1);
+}
+
+.subtitle {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 14px;
+  color: var(--txt3);
+}
+
+.caret {
+  flex-shrink: 0;
+  color: var(--txt3);
+  transform: rotate(-90deg);
+  transition: transform 200ms ease;
+  margin-left: auto;
+}
+
+.caretOpen {
+  transform: rotate(0deg);
+}
+
+.body {
+  padding: 8px 10px 10px 34px;
+}
+
+.content {
+  font-size: 13px;
+  color: var(--txt2);
+  line-height: 1.5;
+}
+
+.copyBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--txt2);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.copyBtn:hover {
+  background: color-mix(in srgb, var(--hover) 40%, transparent);
+}
+
+.errorText {
+  margin: 0;
+  color: var(--txt2);
+  white-space: pre-wrap;
+  word-break: break-word;
+}

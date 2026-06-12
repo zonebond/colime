@@ -1,0 +1,90 @@
+.messageActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--txt3);
+}
+
+.messageTime {
+  margin-right: 6px;
+  font-size: 12px;
+}
+
+.messageActionBtn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: var(--txt3);
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.messageActionBtn:hover {
+  background: var(--hover);
+  color: var(--txt1);
+}
+
+.messageActionBtnActive {
+  color: var(--icon-c);
+}
+
+.moreMenuWrap {
+  position: relative;
+}
+
+.moreMenu {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  right: 0;
+  min-width: 160px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  z-index: 10;
+}
+
+.moreMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  font-size: 13px;
+  color: var(--txt1);
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 120ms ease;
+  text-align: left;
+}
+
+.moreMenuItem:hover {
+  background: var(--hover);
+}
+
+.moreMenuItemDanger {
+  color: var(--danger, #ef4444);
+}
+
+.moreMenuItemDanger:hover {
+  background: color-mix(in srgb, var(--danger, #ef4444) 10%, transparent);
+}
+
+.moreMenuItemActive {
+  background: color-mix(in srgb, var(--icon-c) 8%, transparent);
+}
+
+.modelMenuItemName {
+  flex: 1;
+  font-size: 13px;
+}
+
+.modelMenuItemDesc {
+  font-size: 11px;
+  color: var(--txt3);
+}

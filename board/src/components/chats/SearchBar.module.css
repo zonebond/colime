@@ -1,0 +1,67 @@
+.wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 9.6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  gap: 8px;
+  transition: border-color 150ms ease;
+}
+
+.wrap:focus-within {
+  border-color: var(--icon-c);
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--txt3);
+  pointer-events: none;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--txt1);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--txt3);
+}
+
+.clear {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--txt3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.clear:hover {
+  background: var(--hover);
+  color: var(--txt2);
+}
+
+.clear svg {
+  width: 10px;
+  height: 10px;
+}

@@ -1,0 +1,247 @@
+.codeBlockWrap {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  background: color-mix(in srgb, var(--surface-soft) 34%, var(--main-bg));
+}
+
+.codeBlockCollapsed .codeBlockBody {
+  max-height: 340px;
+  mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+}
+
+.codeBlockHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px 6px 14px;
+  background: color-mix(in srgb, var(--hover) 60%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+  min-height: 34px;
+}
+
+.codeLanguage {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--txt2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.codeHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.codeExpandBtn {
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--txt2);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.codeExpandBtn:hover {
+  color: var(--txt1);
+  background: color-mix(in srgb, var(--hover) 80%, transparent);
+}
+
+.codeActionBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--txt2);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.codeActionBtn:hover {
+  background: color-mix(in srgb, var(--hover) 80%, transparent);
+  color: var(--txt1);
+}
+
+.codeActionLabel {
+  font-size: 11px;
+}
+
+.codeRunBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--icon-c) 12%, transparent);
+  color: var(--icon-c);
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.codeRunBtn:hover {
+  background: color-mix(in srgb, var(--icon-c) 20%, transparent);
+}
+
+.codeOutput {
+  border-top: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+  background: color-mix(in srgb, var(--surface-soft) 20%, var(--main-bg));
+}
+
+.codeOutputHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--txt2);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
+}
+
+.codeOutputClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--txt3);
+  cursor: pointer;
+}
+
+.codeOutputClose:hover {
+  background: var(--hover);
+  color: var(--txt1);
+}
+
+.codeOutputContent {
+  padding: 10px 14px;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--txt1);
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+.codeBlockBody {
+  display: flex;
+  overflow: hidden;
+  position: relative;
+}
+
+.lineNumbers {
+  flex-shrink: 0;
+  padding: 14px 10px 14px 14px;
+  text-align: right;
+  user-select: none;
+  border-right: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+  background: color-mix(in srgb, var(--hover) 30%, transparent);
+  color: var(--txt3);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.lineNumbers span {
+  display: block;
+}
+
+.codeBlock {
+  flex: 1;
+  overflow-x: auto;
+  padding: 14px 16px;
+  margin: 0;
+}
+
+/* Shiki integration — reset wrapper styles, let inline styles do the work */
+.codeBlock :global(.shiki) {
+  background: transparent !important;
+  padding: 0;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.75;
+  tab-size: 2;
+}
+
+.codeBlock :global(.shiki code) {
+  font-family: inherit;
+  font-size: 0;
+  line-height: inherit;
+  display: block;
+  min-width: max-content;
+}
+
+.codeBlock :global(.shiki .line) {
+  display: block;
+  font-size: 13px;
+  line-height: 1.75;
+  min-height: 1.75em;
+}
+
+.codeBlock code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--txt1);
+  display: block;
+  min-width: max-content;
+}
+
+.codeInlineBlock {
+  display: block;
+  min-width: max-content;
+}
+
+.codeBlockFullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  border-radius: 0;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  max-height: none !important;
+}
+
+.codeFullscreenOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.codeBlockFullscreen .codeBlockBody {
+  flex: 1;
+  overflow: auto;
+}
+
+.codeBlockFullscreen .codeBlock {
+  flex: 1;
+}

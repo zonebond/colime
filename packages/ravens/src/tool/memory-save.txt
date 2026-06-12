@@ -1,0 +1,11 @@
+Save information to persistent memory for future sessions.
+
+Use this tool to save important context that should persist across conversations.
+
+Choose the appropriate category:
+- "user": Personal preferences and habits that apply across all projects (e.g., "I prefer pnpm over npm")
+- "project": Decisions and architecture specific to this project (e.g., "We use Redis for caching")
+- "feedback": Corrections and lessons learned (e.g., "Don't modify auth module without asking")
+- "reference": Important file locations and patterns (e.g., "Database schema is in prisma/schema.prisma")
+
+Keep entries concise and factual. Do not save information already in instruction files.

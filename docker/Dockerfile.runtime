@@ -1,0 +1,35 @@
+FROM oven/bun:1-alpine AS base
+
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories && apk update && apk add --no-cache ripgrep python3 make g++ git go curl gzip zip unzip bzip2 xz zstd nodejs npm
+
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+
+RUN bun install -g pnpm@latest --registry https://registry.npmmirror.com
+
+ENV GOPATH=/root/go
+ENV GOCACHE=/root/.cache/go-build
+ENV PATH="/root/go/bin:/root/.local/bin:${PATH}"
+
+# Disable transpiler cache inside ephemeral containers
+ENV BUN_RUNTIME_TRANSPILER_CACHE_PATH=0
+ENV RAVENS_CONFIG_DIR=/app/config
+
+WORKDIR /app
+
+# Copy workspace root configs
+COPY package.json bun.lock ./
+
+# Copy workspace packages (source first, then install)
+COPY packages/core/ packages/core/
+COPY packages/ravens/ packages/ravens/
+COPY packages/plugin/ packages/plugin/
+COPY packages/sdk/js/ packages/sdk/js/
+COPY packages/ui/ packages/ui/
+
+RUN bun install --ignore-scripts --frozen-lockfile --registry https://registry.npmmirror.com
+
+RUN mkdir -p /app/config
+
+EXPOSE 4096
+
+CMD ["bun", "run", "--conditions=browser", "packages/ravens/src/index.ts", "serve", "--port", "4096", "--hostname", "0.0.0.0"]

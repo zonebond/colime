@@ -1,0 +1,460 @@
+.item {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+}
+
+.checkWrap {
+  width: var(--check-w, 24px);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0);
+  transition: opacity 180ms ease, transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.checkVisible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.checkInput {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: var(--icon-c);
+  margin: 0;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 12px;
+  cursor: pointer;
+  position: relative;
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: 1px solid var(--border);
+  transition: background 200ms ease, border-color 200ms ease, transform 150ms ease;
+  outline: none;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.item {
+  animation: itemFadeIn 400ms ease forwards;
+  opacity: 0;
+}
+
+@keyframes itemFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.content:hover {
+  background: var(--active);
+  transform: translateY(-1px);
+  transition: background 200ms ease, transform 200ms cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+.content:hover .pinBadge {
+  color: var(--icon-c);
+  transform: scale(1.1);
+}
+
+.content:focus-visible {
+  background: var(--hover);
+  border-color: var(--border);
+  transform: translateY(-1px);
+}
+
+.active .content {
+  background: var(--active);
+  border-color: var(--border);
+}
+
+.content::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 24px;
+  border-radius: 0 2px 2px 0;
+  background: var(--icon-c);
+  opacity: 0;
+  transition: opacity 150ms ease, background 200ms ease;
+}
+
+.starred {
+  background: color-mix(in srgb, var(--warning) 6%, transparent);
+}
+
+.starred::before {
+  background: var(--warning);
+  opacity: 1;
+}
+
+.item:hover .content::before,
+.selected .content::before,
+.active .content::before {
+  opacity: 1;
+}
+
+.selected .content {
+  background: var(--hover);
+  transform: translateY(-1px);
+  animation: contentSelect 300ms ease forwards;
+}
+
+@keyframes contentSelect {
+  0% {
+    transform: translateY(-1px) scale(1);
+  }
+  50% {
+    transform: translateY(-1px) scale(1.005);
+  }
+  100% {
+    transform: translateY(-1px) scale(1);
+  }
+}
+
+.item:last-child .content {
+  border-bottom: none;
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.title {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--txt2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 200ms ease;
+}
+
+.starred .title {
+  color: var(--txt1);
+}
+
+.content:hover .title,
+.active .content .title,
+.selected .content .title {
+  color: var(--icon-c);
+}
+
+.pinBadge {
+  color: var(--warning);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  transition: color 200ms ease, transform 200ms cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+.subIcon {
+  color: var(--txt3);
+  flex-shrink: 0;
+  margin-right: 2px;
+  vertical-align: middle;
+}
+
+.preview {
+  font-size: 13px;
+  color: var(--txt2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  transition: color 200ms ease;
+}
+
+.content:hover .preview {
+  color: var(--txt1);
+}
+
+.bottomRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: auto;
+}
+
+.bottomLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.projectBadge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  color: var(--txt3);
+  cursor: default;
+}
+
+.projectBadge:hover .tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.tooltip {
+  position: fixed;
+  transform: translateY(0);
+  margin-top: 4px;
+  padding: 4px 8px;
+  background: var(--tip-bg);
+  color: var(--tip-c);
+  font-size: 12px;
+  white-space: nowrap;
+  border-radius: 6px;
+  box-shadow: var(--surface-shadow);
+}
+
+.time {
+  font-size: 12px;
+  color: var(--txt3);
+  transition: color 200ms ease;
+}
+
+.content:hover .time {
+  color: var(--txt2);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  transform: translateX(6px);
+  transition: opacity 200ms ease, transform 200ms cubic-bezier(0.34, 1.2, 0.64, 1);
+  flex-shrink: 0;
+}
+
+.actionsVisible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.actionBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--txt3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 120ms ease, color 120ms ease;
+  position: relative;
+}
+
+.actionBtn::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--txt1);
+  color: var(--surface);
+  font-family: var(--font-ui), "Anthropic Sans", system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 430;
+  white-space: nowrap;
+  padding: 4px 8px;
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 150ms ease;
+  z-index: 10;
+}
+
+.actionBtn:hover::after {
+  opacity: 1;
+}
+
+.actionBtn:hover {
+  background: var(--surface-soft);
+  color: var(--txt2);
+}
+
+.actionActive {
+  color: var(--icon-c);
+}
+
+.deleteBtn:hover {
+  color: var(--danger);
+}
+
+.confirm {
+  background: rgba(229, 72, 77, 0.1);
+  color: var(--danger);
+}
+
+.confirm:hover {
+  background: rgba(229, 72, 77, 0.15);
+  color: var(--danger);
+}
+
+.moreBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--txt3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.moreBtn:hover {
+  background: var(--surface-soft);
+  color: var(--txt2);
+}
+
+.moreBtn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.popoverBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+}
+
+.popover {
+  position: fixed;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  padding: 4px;
+  min-width: 140px;
+  z-index: 100;
+  animation: popoverIn 150ms ease;
+}
+
+@keyframes popoverIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.popoverUp {
+  animation: popoverInUp 150ms ease;
+}
+
+@keyframes popoverInUp {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.popoverItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  color: var(--txt1);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 100ms ease;
+}
+
+.popoverItem:hover {
+  background: var(--hover);
+}
+
+.popoverItem svg {
+  width: 16px;
+  height: 16px;
+  color: var(--txt2);
+}
+
+.popoverItemActive svg {
+  color: var(--warning);
+}
+
+.popoverDelete,
+.popoverDelete span {
+  color: var(--danger);
+}
+
+.popoverDelete:hover {
+  background: rgba(229, 72, 77, 0.08);
+}
+
+.popoverDelete svg {
+  color: var(--danger);
+}
+
+.popoverDeleteConfirm {
+  background: rgba(229, 72, 77, 0.12);
+  color: var(--danger);
+}
+
+.popoverDeleteConfirm:hover {
+  background: rgba(229, 72, 77, 0.18);
+}
+
+.popoverDivider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 8px;
+}

@@ -1,0 +1,40 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dateSeparator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0 8px;
+}
+
+.dateSeparator span {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--txt3);
+  background: var(--main-bg);
+  padding: 2px 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+}
+
+[data-message-index] {
+  /* content-visibility: auto disabled — caused inaccurate scrollHeight during auto-scroll */
+}
+
+.messageFocused {
+  border-radius: 12px;
+}
+
+.messageAnchored {
+}
+
+.messageSearchHighlight {
+  border-radius: 12px;
+  outline: 2px solid color-mix(in srgb, #f59e0b 50%, transparent);
+  outline-offset: -2px;
+  background: color-mix(in srgb, #f59e0b 6%, transparent);
+}

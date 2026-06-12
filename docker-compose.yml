@@ -1,0 +1,28 @@
+services:
+  runtime:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.runtime
+    environment:
+      - RAVENS_CONFIG_DIR=/app/config
+      - RAVENS_SERVER_PASSWORD=${RAVENS_SERVER_PASSWORD:-nQ0oWPWrFCjyTsE91zfWBuEff27LSweb}
+    volumes:
+      - ./data/runtime-config:/app/config
+      - ./data/runtime-data:/root/.local/share/ravens
+      - ./data/global-config:/root/.config/ravens
+      - ./data/agents:/root/.agents
+    # Internal only — webapp proxies to it
+    expose:
+      - "4096"
+
+  webapp:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.webapp
+    ports:
+      - "${WEBAPP_PORT:-5090}:80"
+      - "${WEBAPP_HTTPS_PORT:-5443}:443"
+    volumes:
+      - ./data/ssl:/etc/nginx/ssl
+    depends_on:
+      - runtime

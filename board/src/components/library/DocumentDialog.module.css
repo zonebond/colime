@@ -1,0 +1,202 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, black 38%, transparent);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  animation: overlayIn 150ms ease;
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.dialog {
+  width: min(600px, calc(100vw - 32px));
+  background: var(--surface-strong);
+  border: 1px solid color-mix(in srgb, var(--border) 96%, transparent);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 24px 64px color-mix(in srgb, black 20%, transparent), 0 1px 0 color-mix(in srgb, var(--surface) 80%, transparent) inset;
+  animation: dialogIn 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+@keyframes dialogIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.header {
+  padding: 20px 22px 16px;
+  background: color-mix(in srgb, var(--surface-soft) 70%, var(--surface));
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 22px 18px;
+}
+
+.fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--txt1);
+  line-height: 1.2;
+  margin: 0;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--txt2);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.titleInput,
+.contentInput,
+.tagsInput {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  font-family: inherit;
+  color: var(--txt1);
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+  border-radius: 12px;
+  outline: none;
+  transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
+  box-sizing: border-box;
+}
+
+.titleInput {
+  height: 46px;
+}
+
+.contentInput {
+  min-height: 240px;
+  resize: vertical;
+  font-family: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
+  font-size: 13px;
+}
+
+.tagsInput {
+  height: 46px;
+}
+
+.titleInput:focus,
+.contentInput:focus,
+.tagsInput:focus {
+  border-color: var(--icon-c);
+  background: var(--surface);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--icon-c) 12%, transparent);
+}
+
+.titleInput::placeholder,
+.contentInput::placeholder,
+.tagsInput::placeholder {
+  color: var(--txt3);
+}
+
+.titleInput:disabled,
+.contentInput:disabled,
+.tagsInput:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--txt3);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 22px 22px;
+  border-top: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
+  background: color-mix(in srgb, var(--surface-soft) 42%, var(--surface));
+}
+
+.cancelBtn {
+  height: 34px;
+  padding: 0 13px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--txt2);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  border-radius: 9px;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+.cancelBtn:hover:not(:disabled) {
+  background: var(--hover);
+  color: var(--txt1);
+  border-color: color-mix(in srgb, var(--border) 100%, transparent);
+}
+
+.cancelBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.confirmBtn {
+  height: 34px;
+  padding: 0 13px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--btn-text);
+  background: var(--icon-c);
+  border-radius: 9px;
+  box-shadow: 0 1px 0 color-mix(in srgb, white 14%, transparent) inset;
+  transition: opacity 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+}
+
+.confirmBtn:hover:not(:disabled) {
+  opacity: 0.85;
+  box-shadow: 0 1px 0 color-mix(in srgb, white 20%, transparent) inset;
+}
+
+.confirmBtn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.confirmBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

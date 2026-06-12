@@ -1,0 +1,93 @@
+.shimmer {
+  --text-shimmer-step: 45ms;
+  --text-shimmer-duration: 1200ms;
+  --text-shimmer-swap: 220ms;
+  --text-shimmer-index: 0;
+  --text-shimmer-angle: 90deg;
+  --text-shimmer-spread: 5.2ch;
+  --text-shimmer-size: 360%;
+  --text-shimmer-base-color: var(--txt3);
+  --text-shimmer-peak-color: var(--txt1);
+
+  display: inline-flex;
+  align-items: center;
+  isolation: isolate;
+}
+
+.shimmerChar {
+  display: inline-grid;
+  grid-template: 1fr / 1fr;
+  place-items: center start;
+  white-space: pre;
+}
+
+.shimmerBase,
+.shimmerSweep {
+  grid-area: 1 / 1;
+  white-space: pre;
+  transition: opacity var(--text-shimmer-swap) ease;
+}
+
+.shimmerBase {
+  opacity: 1;
+}
+
+.shimmer[data-active="true"] .shimmerBase {
+  opacity: 0;
+}
+
+.shimmerSweep {
+  opacity: 0;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  background-image:
+    linear-gradient(
+      var(--text-shimmer-angle),
+      transparent calc(50% - var(--text-shimmer-spread)),
+      var(--text-shimmer-peak-color) 50%,
+      transparent calc(50% + var(--text-shimmer-spread))
+    ),
+    linear-gradient(var(--text-shimmer-base-color), var(--text-shimmer-base-color));
+  background-size:
+    var(--text-shimmer-size) 100%,
+    100% 100%;
+  background-position:
+    100% 0,
+    0 0;
+  background-repeat: no-repeat;
+}
+
+.shimmer[data-active="true"] .shimmerSweep {
+  opacity: 1;
+}
+
+.shimmerSweep[data-run="true"] {
+  animation: textShimmerSweep var(--text-shimmer-duration) linear infinite;
+  animation-delay: calc(var(--text-shimmer-step) * var(--text-shimmer-index) * -1);
+}
+
+@keyframes textShimmerSweep {
+  from { background-position: 100% 0, 0 0; }
+  to   { background-position: 0% 0, 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmerBase,
+  .shimmerSweep {
+    transition-duration: 0ms;
+  }
+
+  .shimmerSweep[data-run="true"] {
+    animation: none !important;
+  }
+
+  .shimmer[data-active="true"] .shimmerBase {
+    opacity: 1;
+  }
+
+  .shimmer[data-active="true"] .shimmerSweep {
+    opacity: 0;
+  }
+}

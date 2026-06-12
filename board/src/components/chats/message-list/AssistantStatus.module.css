@@ -1,0 +1,36 @@
+.thinkingArea {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 8px;
+  margin-left: 8px;
+  font-size: 13px;
+  color: var(--txt3);
+}
+
+.thinkingReasoningHeading {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.statusPill {
+  align-self: flex-start;
+  margin-left: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  color: var(--txt3);
+  font-size: 13px;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.statusPill:hover {
+  background: var(--hover);
+  color: var(--txt2);
+}
+
+.statusPillError {
+  color: var(--err, #ef4444);
+}

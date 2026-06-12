@@ -1,0 +1,17 @@
+.list {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 0;
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+}
+
+.sep {
+  color: var(--txt3);
+  font-size: 14px;
+  font-weight: 400;
+}

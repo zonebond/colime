@@ -1,0 +1,18 @@
+.highlighted {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+[data-highlight="file"] {
+  color: var(--txt-link);
+  background: color-mix(in srgb, var(--txt-link) 12%, transparent);
+  border-radius: 3px;
+  padding: 0 1px;
+}
+
+[data-highlight="agent"] {
+  color: var(--txt-accent);
+  background: color-mix(in srgb, var(--txt-accent) 12%, transparent);
+  border-radius: 3px;
+  padding: 0 1px;
+}
