@@ -6,7 +6,7 @@ import { FileWatcher } from "../file/watcher"
 import { InstanceState } from "@/effect/instance-state"
 import { Patch } from "../patch"
 import { createTwoFilesPatch, diffLines } from "diff"
-import { assertExternalDirectoryEffect } from "./external-directory"
+import { containsPath, type InstanceContext } from "../project/instance-context"
 import { trimDiff } from "./edit"
 import { LSP } from "@/lsp/lsp"
 import { AppFileSystem } from "@ravens-ai/core/filesystem"
@@ -18,6 +18,17 @@ import * as Bom from "@/util/bom"
 export const Parameters = Schema.Struct({
   patchText: Schema.String.annotate({ description: "The full patch text that describes all changes to be made" }),
 })
+
+// Patch paths are project-relative by format; reject absolute paths and any
+// path that resolves outside the project boundary instead of falling back to
+// an external_directory permission ask.
+function resolveBoundedPath(instance: InstanceContext, target: string): string | undefined {
+  if (path.isAbsolute(target)) return undefined
+  const resolved = path.resolve(instance.directory, target)
+  const normalized = process.platform === "win32" ? AppFileSystem.normalizePath(resolved) : resolved
+  if (!containsPath(normalized, instance)) return undefined
+  return resolved
+}
 
 export const ApplyPatchTool = Tool.define(
   "apply_patch",
@@ -70,8 +81,12 @@ export const ApplyPatchTool = Tool.define(
       let totalDiff = ""
 
       for (const hunk of hunks) {
-        const filePath = path.resolve(instance.directory, hunk.path)
-        yield* assertExternalDirectoryEffect(ctx, filePath)
+        const filePath = resolveBoundedPath(instance, hunk.path)
+        if (!filePath) {
+          return yield* Effect.fail(
+            new Error(`apply_patch verification failed: path escapes the project directory: ${hunk.path}`),
+          )
+        }
 
         switch (hunk.type) {
           case "add": {
@@ -135,8 +150,12 @@ export const ApplyPatchTool = Tool.define(
               if (change.removed) deletions += change.count || 0
             }
 
-            const movePath = hunk.move_path ? path.resolve(instance.directory, hunk.move_path) : undefined
-            yield* assertExternalDirectoryEffect(ctx, movePath)
+            const movePath = hunk.move_path ? resolveBoundedPath(instance, hunk.move_path) : undefined
+            if (hunk.move_path && !movePath) {
+              return yield* Effect.fail(
+                new Error(`apply_patch verification failed: path escapes the project directory: ${hunk.move_path}`),
+              )
+            }
 
             fileChanges.push({
               filePath,

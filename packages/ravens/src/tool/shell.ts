@@ -148,6 +148,15 @@ function envValue(key: string) {
   return name ? process.env[name] : undefined
 }
 
+// Secrets held by the ravens process (server credentials, provider API keys,
+// tokens) must not leak into shell commands run on the model's behalf.
+// Plugins can deliberately re-add specific variables via the "shell.env" hook.
+const SENSITIVE_ENV = /^RAVENS_SERVER_|KEY$|SECRET|TOKEN$|PASSWORD|PASSWD|CREDENTIAL/i
+
+export function sanitizedProcessEnv(): NodeJS.ProcessEnv {
+  return Object.fromEntries(Object.entries(process.env).filter(([name]) => !SENSITIVE_ENV.test(name)))
+}
+
 function auto(key: string, cwd: string, shell: string) {
   const name = key.toUpperCase()
   if (name === "HOME") return os.homedir()
@@ -415,7 +424,7 @@ export const ShellTool = Tool.define(
         { env: {} },
       )
       return {
-        ...process.env,
+        ...sanitizedProcessEnv(),
         ...extra.env,
       }
     })
