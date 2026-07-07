@@ -729,7 +729,9 @@ export default function ChatPage() {
 
   return (
     <div className={styles.page}>
-      <div className={`${styles.shell} ${showWelcome ? styles.shellEmpty : ''}`} style={{ '--composer-height': `${composerHeight}px` }}>
+      {/* Only set the var once measured — an invalid value like "nullpx"
+          would defeat the CSS fallback and collapse the bottom padding. */}
+      <div className={`${styles.shell} ${showWelcome ? styles.shellEmpty : ''}`} style={composerHeight != null ? { '--composer-height': `${composerHeight}px` } : undefined}>
         {!showWelcome && <header className={styles.header}>
           <div className={styles.headerGradient} />
           <div className={styles.headerInner}>
