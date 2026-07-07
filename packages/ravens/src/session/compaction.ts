@@ -194,6 +194,7 @@ export interface Interface {
   readonly isOverflow: (input: {
     tokens: MessageV2.Assistant["tokens"]
     model: Provider.Model
+    messages?: MessageV2.WithParts[]
   }) => Effect.Effect<boolean>
   readonly prune: (input: { sessionID: SessionID }) => Effect.Effect<void>
   readonly process: (input: {
@@ -242,8 +243,28 @@ export const layer: Layer.Layer<
     const isOverflow = Effect.fn("SessionCompaction.isOverflow")(function* (input: {
       tokens: MessageV2.Assistant["tokens"]
       model: Provider.Model
+      messages?: MessageV2.WithParts[]
     }) {
-      return overflow({ cfg: yield* config.get(), tokens: input.tokens, model: input.model })
+      const cfg = yield* config.get()
+      if (overflow({ cfg, tokens: input.tokens, model: input.model })) return true
+
+      // Some providers never report usage (all-zero tokens). Estimate from
+      // serialized message content so auto-compaction still triggers instead
+      // of overflowing the provider on a later turn.
+      const reported =
+        input.tokens.total ||
+        input.tokens.input + input.tokens.output + input.tokens.cache.read + input.tokens.cache.write
+      if (
+        reported === 0 &&
+        input.messages?.length &&
+        input.model.limit.context > 0 &&
+        cfg.compaction?.auto !== false
+      ) {
+        const estimated = yield* estimate({ messages: input.messages, model: input.model })
+        return estimated >= usable({ cfg, model: input.model })
+      }
+
+      return false
     })
 
     const estimate = Effect.fn("SessionCompaction.estimate")(function* (input: {
