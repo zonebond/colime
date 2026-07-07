@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/apiClient'
+import { streamEvents } from '@/lib/sseClient'
 import { runtimeConfig } from '@/config/runtime'
 import {
   normalizeChat,
@@ -22,61 +23,17 @@ async function fetchMessages(chatId, directory) {
 
 /**
  * Connect to ravens SSE event stream for a directory.
- * Parses SSE events and calls onEvent for each. Runs until aborted.
+ * Reconnects automatically on dropped connections; runs until aborted.
  *
  * @param {object} opts
  * @param {string} opts.directory - Session directory for instance routing
  * @param {(event: {event: string, data: object}) => void} opts.onEvent
  * @param {AbortSignal} opts.signal - Abort to disconnect
  */
-async function streamSessionEvents({ directory, onEvent, signal }) {
+function streamSessionEvents({ directory, onEvent, signal }) {
   const baseUrl = runtimeConfig.apiBaseUrl
   const url = `${baseUrl}/event?directory=${encodeURIComponent(directory)}`
-
-  try {
-    const response = await fetch(url, {
-      signal,
-      headers: { Accept: 'text/event-stream' },
-    })
-
-    if (!response.ok) {
-      console.error('SSE connection failed:', response.status)
-      return
-    }
-
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder()
-    let buffer = ''
-
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-
-      buffer += decoder.decode(value, { stream: true })
-      const lines = buffer.split('\n')
-      buffer = lines.pop()
-
-      let data = ''
-
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          data = line.slice(6)
-        } else if (line === '' && data) {
-          try {
-            const parsed = JSON.parse(data)
-            onEvent({ event: 'message', data: parsed })
-          } catch (_) {
-            // skip malformed events
-          }
-          data = ''
-        }
-      }
-    }
-  } catch (err) {
-    if (err.name !== 'AbortError') {
-      console.error('SSE stream error:', err)
-    }
-  }
+  return streamEvents({ url, onEvent, signal })
 }
 
 // ─── Adapter (Ravens) ───────────────────────────────────────────────
@@ -146,12 +103,36 @@ const adapter = {
     })
 
     // Start SSE stream for real-time events during prompt execution.
-    // Fire-and-forget — runs in background until aborted.
+    // The stream stays open until the session reports a terminal status
+    // (idle/error) after the POST settles, with a hard cap as a safety
+    // net so a missed event can't leak the connection.
+    const SSE_FLUSH_DELAY = 500
+    const SSE_LINGER_MAX = 60_000
+
     const sseController = new AbortController()
+    let postSettled = false
+    let sawTerminalStatus = false
+    let lingerTimer = null
+
+    const closeStream = (delay) => {
+      clearTimeout(lingerTimer)
+      lingerTimer = setTimeout(() => sseController.abort(), delay)
+    }
+
     if (input.directory && input.onEvent) {
       streamSessionEvents({
         directory: input.directory,
-        onEvent: input.onEvent,
+        onEvent: (event) => {
+          input.onEvent(event)
+          const { type, properties } = event.data ?? {}
+          if (type === 'session.status' && properties?.sessionID === chatId) {
+            const statusType = properties.status?.type
+            if (statusType === 'idle' || statusType === 'error') {
+              sawTerminalStatus = true
+              if (postSettled) closeStream(SSE_FLUSH_DELAY)
+            }
+          }
+        },
         signal: sseController.signal,
       })
     }
@@ -167,8 +148,8 @@ const adapter = {
       const message = normalizeMessage(response)
       return message
     } finally {
-      // Keep SSE alive briefly so late events (session.status idle) are delivered
-      setTimeout(() => sseController.abort(), 2000)
+      postSettled = true
+      closeStream(sawTerminalStatus ? SSE_FLUSH_DELAY : SSE_LINGER_MAX)
     }
   },
 
