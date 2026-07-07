@@ -811,3 +811,24 @@
   font-weight: 500;
   background: var(--surface);
 }
+
+/* Shiki-highlighted code preview — aligns with the line-number gutter */
+.codeHighlighted {
+  flex: 1;
+  overflow: auto;
+}
+
+.codeHighlighted pre {
+  margin: 0;
+  padding: 16px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: transparent !important;
+}
+
+.codeHighlighted code {
+  font-family: inherit;
+}

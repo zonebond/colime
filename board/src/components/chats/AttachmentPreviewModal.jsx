@@ -6,7 +6,10 @@ import remarkGfm from 'remark-gfm'
 import rehypeSlug from 'rehype-slug'
 import DOMPurify from 'dompurify'
 import { useTranslation } from '@/i18n'
+import { ensureLanguage, highlightSync } from '@/lib/highlight'
+import sanitizeHtml from '@/lib/sanitize'
 import { AttachmentImage } from '@/components/attachments/AttachmentCard'
+import CodeBlock from './content-blocks/CodeBlock'
 import { getFileExtension } from './message-list/helpers'
 import styles from './AttachmentPreviewModal.module.css'
 
@@ -182,6 +185,33 @@ export default function AttachmentPreviewModal({
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [])
 
+  // ESC closes the preview
+  useEffect(() => {
+    if (!attachment) return undefined
+    function handleKey(e) {
+      if (e.key === 'Escape') onClose?.()
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [attachment, onClose])
+
+  // Syntax highlighting for code previews via the shared lazy shiki engine
+  const [highlightedCode, setHighlightedCode] = useState(null)
+  const isCodePreview = attachment?.previewType === 'code'
+  const codeLang = getFileExtension(attachment?.file?.name || '')
+  useEffect(() => {
+    setHighlightedCode(null)
+    if (!isCodePreview || !content) return undefined
+    let cancelled = false
+    ensureLanguage(codeLang)
+      .then(() => {
+        if (cancelled) return
+        setHighlightedCode(highlightSync(content, codeLang || 'text'))
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [isCodePreview, content, codeLang])
+
   const previewType = attachment?.previewType
   const file = attachment?.file
 
@@ -290,8 +320,15 @@ export default function AttachmentPreviewModal({
               {(previewType === 'code' || previewType === 'text') && (
                 <div className={styles.contentWrap}>
                   {content ? (
-                    <div className={styles.codeWrap}><div className={styles.lineNumbers}>{content.split('\n').map((_, i) => <span key={i}>{i + 1}</span>)}</div><pre className={styles.code}><code className={previewType === 'code' ? `language-${getFileExtension(file?.name)}` : ''}>{content}</code></pre></div>
-                  ) : <div className={styles.fileCenter}><div className={styles.fileCenterIcon}><FileText size={64} weight="fill" /></div><div className={styles.fileHint}>Loading content...</div></div>}
+                    <div className={styles.codeWrap}>
+                      <div className={styles.lineNumbers}>{content.split('\n').map((_, i) => <span key={i}>{i + 1}</span>)}</div>
+                      {highlightedCode ? (
+                        <div className={styles.codeHighlighted} dangerouslySetInnerHTML={{ __html: sanitizeHtml(highlightedCode) }} />
+                      ) : (
+                        <pre className={styles.code}><code>{content}</code></pre>
+                      )}
+                    </div>
+                  ) : <div className={styles.fileCenter}><div className={styles.fileCenterIcon}><FileText size={64} weight="fill" /></div><div className={styles.fileHint}>{tc.previewLoading || 'Loading preview...'}</div></div>}
                 </div>
               )}
               {/* Markdown */}
@@ -300,7 +337,17 @@ export default function AttachmentPreviewModal({
                   {content ? (
                     <>
                       <div className={styles.markdown} ref={mdRef}>
-                        <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSlug]}>{content}</ReactMarkdown>
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          rehypePlugins={[rehypeSlug]}
+                          components={{
+                            pre: ({ children }) => {
+                              const codeChild = Array.isArray(children) ? children[0] : children
+                              const codeClassName = codeChild?.props?.className || ''
+                              return <CodeBlock className={codeClassName}>{codeChild?.props?.children || children}</CodeBlock>
+                            },
+                          }}
+                        >{content}</ReactMarkdown>
                       </div>
                       {hasOutline && (
                         <div

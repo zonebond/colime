@@ -21,6 +21,7 @@ function timeAgo(ts) {
 export default function ChatNavRail({
   messages = [],
   onScrollToMessage,
+  onScrollToBottom,
   focusedIndex = -1,
   activeMessageIndex = -1,
 }) {
@@ -89,7 +90,7 @@ export default function ChatNavRail({
     return best
   }, [effectiveActiveIndex, userTicks])
 
-  const atBottom = effectiveActiveIndex >= 0 && effectiveActiveIndex < messages.length - 2
+  const notAtBottom = effectiveActiveIndex >= 0 && effectiveActiveIndex < messages.length - 2
 
   if (!visible || userTicks.length === 0) return null
 
@@ -169,11 +170,18 @@ export default function ChatNavRail({
         </div>
       </div>
 
-      {atBottom && (
+      {notAtBottom && (
         <button
           type="button"
           className={styles.scrollBottom}
           onClick={() => {
+            // Scroll to the true bottom of the conversation (and re-enable
+            // follow mode) — not merely to the last user message, which may
+            // already be in view above a long assistant response.
+            if (onScrollToBottom) {
+              onScrollToBottom()
+              return
+            }
             const last = userTicks[userTicks.length - 1]
             if (last) onScrollToMessage?.(last.index)
           }}
