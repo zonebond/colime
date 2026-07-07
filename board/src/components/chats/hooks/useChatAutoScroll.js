@@ -151,14 +151,25 @@ export default function useChatAutoScroll({
     const wasLoading = prevLoadingRef.current
     prevLoadingRef.current = loading
     if (!wasLoading || loading || messages.length === 0) return
-    // Wait for ChatTimeline exit animation + messages render before scrolling
-    const timer = setTimeout(() => {
-      autoScrollRef.current = true
-      lastMessageCountRef.current = 0
-      scrollToBottom('auto')
-    }, 400)
-    return () => clearTimeout(timer)
-  }, [loading, messages.length, scrollToBottom])
+    // Wait for ChatTimeline exit animation + messages render, then keep
+    // re-pinning briefly — late-rendering content grows the scroll height
+    // after the first scroll and would hide the last rows behind the composer.
+    const timers = [400, 800, 1400].map((delay, i) =>
+      setTimeout(() => {
+        if (i === 0) {
+          autoScrollRef.current = true
+          lastMessageCountRef.current = 0
+          scrollToBottom('auto')
+          return
+        }
+        if (!autoScrollRef.current) return
+        const container = scrollAreaRef.current
+        if (!container) return
+        if (distanceFromBottom(container) > 2) scrollToBottom('auto')
+      }, delay)
+    )
+    return () => timers.forEach(clearTimeout)
+  }, [loading, messages.length, scrollToBottom, distanceFromBottom, scrollAreaRef])
 
   // Reset scroll state on chat switch
   useEffect(() => {
@@ -172,11 +183,26 @@ export default function useChatAutoScroll({
     }
     setShowScrollButton(false)
     setComposerHeight(null)
-    // Defer scroll to ensure DOM has settled after render
-    requestAnimationFrame(() => {
+    // Re-pin to the bottom over a short window instead of once: late
+    // renders (composer measurement, markdown highlight, tool summaries)
+    // keep growing the scroll height after the first paint and would
+    // otherwise leave the last rows hidden behind the composer overlay.
+    const raf = requestAnimationFrame(() => {
       scrollToBottom('auto')
     })
-  }, [chatId, scrollToBottom])
+    const timers = [150, 450, 900].map((delay) =>
+      setTimeout(() => {
+        if (!autoScrollRef.current) return
+        const container = scrollAreaRef.current
+        if (!container) return
+        if (distanceFromBottom(container) > 2) scrollToBottom('auto')
+      }, delay)
+    )
+    return () => {
+      cancelAnimationFrame(raf)
+      timers.forEach(clearTimeout)
+    }
+  }, [chatId, scrollToBottom, distanceFromBottom, scrollAreaRef])
 
   // Scroll state is managed by the scroll event handler below.
   // We deliberately do NOT call updateScrollState on every render — doing so

@@ -384,3 +384,29 @@ export function finalizeMessage(message, info) {
     _tokens: info?.tokens ?? null,
   }
 }
+
+/**
+ * Reconcile a message loaded from history against a session that is no
+ * longer running: anything still marked as in-progress (message status
+ * "loading", blocks stuck in "active"/"loading") is stale — the run it
+ * belonged to has ended — so settle it to "done" to stop phantom spinners
+ * after a page reload.
+ */
+export function finalizeStaleMessage(message) {
+  if (!message || message.role !== 'assistant') return message
+
+  const hasStaleBlocks = message.contentBlocks?.some(
+    (block) => block.state === 'active' || block.state === 'loading'
+  )
+  if (message.status !== 'loading' && !hasStaleBlocks) return message
+
+  return {
+    ...message,
+    status: message.status === 'loading' ? 'done' : message.status,
+    contentBlocks: (message.contentBlocks ?? []).map((block) =>
+      block.state === 'active' || block.state === 'loading'
+        ? { ...block, state: 'done' }
+        : block
+    ),
+  }
+}

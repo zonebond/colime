@@ -25,6 +25,11 @@ const OVERFLOW_PATTERNS = [
   /prompt too long; exceeded (?:max )?context length/i, // Ollama explicit overflow error
   /too large for model with \d+ maximum context length/i, // Mistral
   /model_context_window_exceeded/i, // z.ai non-standard finish_reason surfaced as error text
+  /range of input length should be/i, // Alibaba DashScope (Qwen)
+  /input length exceeds the maximum/i, // Alibaba DashScope (Qwen) alternate wording
+  /prompt tokens? too long/i, // Volcano Ark (Doubao)
+  /超过.{0,8}(最大|上下文).{0,8}(长度|限制)/, // Chinese-language provider overflow messages
+  /(输入|上下文|对话).{0,12}(超出|超过).{0,8}(限制|上限|最大)/, // Chinese-language variants
 ]
 
 function isOpenAiErrorRetryable(e: APICallError) {

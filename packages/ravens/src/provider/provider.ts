@@ -309,6 +309,10 @@ const layer: Layer.Layer<
           for (const [modelID, model] of Object.entries(provider.models ?? {})) {
             const apiNpm = model.provider?.npm ?? provider.npm ?? modelsDevEntry?.npm ?? "@ai-sdk/openai-compatible"
             const apiID = model.id ?? modelID
+            // Config-defined models rarely specify token limits; fall back to
+            // models.dev metadata so overflow detection (auto-compaction)
+            // still works for known models. A context of 0 disables it.
+            const devModel = modelsDevEntry?.models?.[apiID] ?? modelsDevEntry?.models?.[modelID]
             const parsedModel: Model = {
               id: ModelID.make(modelID),
               api: {
@@ -354,9 +358,9 @@ const layer: Layer.Layer<
               },
               options: model.options ?? {},
               limit: {
-                context: model.limit?.context ?? 0,
-                input: model.limit?.input,
-                output: model.limit?.output ?? 0,
+                context: model.limit?.context ?? devModel?.limit?.context ?? 0,
+                input: model.limit?.input ?? devModel?.limit?.input,
+                output: model.limit?.output ?? devModel?.limit?.output ?? 0,
               },
               headers: model.headers ?? {},
               family: model.family ?? "",

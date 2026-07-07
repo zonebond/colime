@@ -465,6 +465,70 @@ describe("session.compaction.isOverflow", () => {
     ),
   )
 
+  // ─── Zero-usage fallback (providers that never report token usage) ────
+
+  const zeroTokens = { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }
+
+  function fakeTextMessage(text: string): MessageV2.WithParts {
+    const sessionID = SessionID.descending()
+    const messageID = MessageID.ascending()
+    return {
+      info: {
+        id: messageID,
+        role: "user",
+        sessionID,
+        agent: "build",
+        model: ref,
+        time: { created: Date.now() },
+      },
+      parts: [
+        {
+          id: PartID.ascending(),
+          messageID,
+          sessionID,
+          type: "text",
+          text,
+        },
+      ],
+    }
+  }
+
+  it.live(
+    "estimates from messages when provider reports zero usage",
+    provideTmpdirInstance(() =>
+      Effect.gen(function* () {
+        const compact = yield* SessionCompaction.Service
+        const model = createModel({ context: 100_000, output: 32_000 })
+        const messages = [fakeTextMessage("x".repeat(400_000))]
+        expect(yield* compact.isOverflow({ tokens: zeroTokens, model, messages })).toBe(true)
+      }),
+    ),
+  )
+
+  it.live(
+    "zero usage with small messages does not overflow",
+    provideTmpdirInstance(() =>
+      Effect.gen(function* () {
+        const compact = yield* SessionCompaction.Service
+        const model = createModel({ context: 100_000, output: 32_000 })
+        const messages = [fakeTextMessage("hello")]
+        expect(yield* compact.isOverflow({ tokens: zeroTokens, model, messages })).toBe(false)
+      }),
+    ),
+  )
+
+  it.live(
+    "zero usage without a known context limit stays disabled",
+    provideTmpdirInstance(() =>
+      Effect.gen(function* () {
+        const compact = yield* SessionCompaction.Service
+        const model = createModel({ context: 0, output: 0 })
+        const messages = [fakeTextMessage("x".repeat(400_000))]
+        expect(yield* compact.isOverflow({ tokens: zeroTokens, model, messages })).toBe(false)
+      }),
+    ),
+  )
+
   // ─── Bug reproduction tests ───────────────────────────────────────────
   // These tests demonstrate that when limit.input is set, isOverflow()
   // does not subtract any headroom for the next model response. This means
