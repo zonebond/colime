@@ -228,9 +228,21 @@ export default function AttachmentPreviewModal({
           <>
             <div className={styles.header}>
               <div className={styles.headerLeft}>
+                <span className={styles.typeChip} title={TYPE_LABEL[previewType] || 'File'}>
+                  <Icon size={15} weight="fill" />
+                </span>
                 <span className={styles.fileName}>{file.name}</span>
+                {truncated && <span className={styles.truncatedBadge}>{tc.previewTruncated || 'Preview truncated'}</span>}
               </div>
               <div className={styles.headerActions}>
+                {onCopyCode && (
+                  <span className={styles.headerBtnWrap}>
+                    <button type="button" className={styles.downloadBtn} onClick={onCopyCode}>
+                      {codeCopied ? <Check size={16} weight="bold" /> : <Copy size={16} weight="bold" />}
+                    </button>
+                    <span className={styles.headerTooltip}>{codeCopied ? (tc.copied || 'Copied!') : (tc.copy || 'Copy')}</span>
+                  </span>
+                )}
                 {onDownload && (
                   <span className={styles.headerBtnWrap}>
                     <button type="button" className={styles.downloadBtn} onClick={onDownload}><DownloadSimple size={16} weight="bold" /></button>
@@ -256,19 +268,6 @@ export default function AttachmentPreviewModal({
                 </span>
                 <button type="button" className={styles.closeBtn} onClick={onClose}><X size={18} weight="bold" /></button>
               </div>
-            </div>
-            <div className={styles.typeBar}>
-              <div className={styles.typeLeft}>
-                <span className={styles.typeIcon}><Icon size={14} /></span>
-                <span className={styles.typeLabel}>{TYPE_LABEL[previewType] || 'File'}</span>
-                {truncated && <span className={styles.truncatedBadge}>{tc.previewTruncated || 'Preview truncated'}</span>}
-              </div>
-              {onCopyCode && (
-                <button type="button" className={styles.copyBtn} onClick={onCopyCode}>
-                  {codeCopied ? <Check size={14} weight="bold" /> : <Copy size={14} />}
-                  <span>{codeCopied ? 'Copied!' : 'Copy'}</span>
-                </button>
-              )}
             </div>
             <div className={styles.body}>
               {/* PDF */}
