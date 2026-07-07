@@ -160,7 +160,9 @@ const adapter = {
     input.onAbortController?.(abortController)
 
     try {
-      const response = await apiClient.post(`/session/${chatId}/message`, payload)
+      const response = await apiClient.post(`/session/${chatId}/message`, payload, {
+        signal: abortController.signal,
+      })
       // response is { info: Message, parts: Part[] }
       const message = normalizeMessage(response)
       return message

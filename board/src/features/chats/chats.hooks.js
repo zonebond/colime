@@ -747,6 +747,10 @@ export function useChatsModel() {
             }))
           }
         }).catch((error) => {
+          if (error?.name === 'AbortError') {
+            mutateCachedChat(chat.id, (c) => ({ ...c, isResponding: false }))
+            return
+          }
           setChatsError(getErrorMessage(error))
         })
       }
@@ -1027,6 +1031,15 @@ export function useChatModel(chatId) {
 
       return null
     } catch (nextError) {
+      // A user-initiated stop aborts the in-flight request — keep the
+      // optimistic messages (the server-side /abort finalizes them) and
+      // don't surface it as an error.
+      if (nextError?.name === 'AbortError') {
+        mutateCachedChat(chatId, (c) => ({ ...c, isResponding: false }))
+        const currentChat = getCachedChat(chatId)
+        if (currentChat) setChat(currentChat)
+        return currentChat ?? null
+      }
       if (previousChat) {
         upsertCachedChat(previousChat)
         setChat(getCachedChat(chatId))

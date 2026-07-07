@@ -103,8 +103,18 @@ async function parseResponse(response) {
   return response.text()
 }
 
+const IDEMPOTENT_METHODS = new Set(['GET', 'HEAD', 'PUT', 'DELETE'])
+const RETRYABLE_STATUSES = new Set([408, 429, 500, 502, 503, 504, 529])
+
+// Network failures (no HTTP status) and transient server statuses are
+// retryable; deterministic client errors (400/401/403/404/422) are not.
+function isRetryableError(error) {
+  if (error.status == null) return true
+  return RETRYABLE_STATUSES.has(error.status)
+}
+
 async function request(path, options = {}) {
-  const { baseUrl, ...fetchOptions } = options
+  const { baseUrl, maxRetries: maxRetriesOption, baseDelay: baseDelayOption, ...fetchOptions } = options
   const circuitBreaker = getCircuitBreaker()
 
   if (!circuitBreaker.canExecute()) {
@@ -115,8 +125,11 @@ async function request(path, options = {}) {
   }
 
   const isFormData = typeof FormData !== 'undefined' && fetchOptions.body instanceof FormData
-  const maxRetries = fetchOptions.maxRetries || 3
-  const baseDelay = fetchOptions.baseDelay || 1000
+  const method = (fetchOptions.method || 'GET').toUpperCase()
+  // Non-idempotent writes (POST/PATCH) are never retried by default —
+  // a timed-out request may still have been applied by the server.
+  const maxRetries = maxRetriesOption ?? (IDEMPOTENT_METHODS.has(method) ? 3 : 0)
+  const baseDelay = baseDelayOption ?? 1000
   const signal = fetchOptions.signal
   let lastError
 
@@ -130,12 +143,12 @@ async function request(path, options = {}) {
 
     try {
       const response = await fetch(resolveUrl(path, baseUrl), {
+        ...fetchOptions,
         headers: {
           Accept: 'application/json',
           ...(!isFormData && fetchOptions.body ? { 'Content-Type': 'application/json' } : {}),
           ...fetchOptions.headers,
         },
-        ...fetchOptions,
         body: fetchOptions.body
           ? (isFormData ? fetchOptions.body : JSON.stringify(fetchOptions.body))
           : undefined,
@@ -160,6 +173,8 @@ async function request(path, options = {}) {
         throw error
       }
 
+      if (!isRetryableError(error)) break
+
       if (attempt < maxRetries) {
         const delay = baseDelay * Math.pow(2, attempt)
         await new Promise(resolve => setTimeout(resolve, delay))
@@ -167,7 +182,11 @@ async function request(path, options = {}) {
     }
   }
 
-  circuitBreaker.recordFailure()
+  // Deterministic 4xx responses prove the service is reachable —
+  // only transient failures count toward opening the circuit.
+  if (isRetryableError(lastError)) {
+    circuitBreaker.recordFailure()
+  }
   throw lastError
 }
 

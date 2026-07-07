@@ -531,4 +531,8 @@ export const en = {
     fileAccordionExpand: 'Expand',
     fileAccordionCollapse: 'Collapse',
   },
+  errorBoundary: {
+    title: 'Something went wrong while rendering this view.',
+    retry: 'Try again',
+  },
 }
