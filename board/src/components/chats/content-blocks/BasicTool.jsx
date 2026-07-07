@@ -89,7 +89,12 @@ export default memo(function BasicTool({
   const triggerHref = useMemo(() => entry.triggerHref?.(block) ?? null, [entry, block])
   const errorProps = useMemo(() => entry.errorProps?.(block) ?? {}, [entry, block])
   const summary = useMemo(() => entry.renderSummary?.(block) ?? null, [entry, block])
-  const subagentSessionId = summary?.type === 'task' ? summary.sessionId : null
+  // The child session ID lives in tool metadata from the moment the
+  // subtask starts — read it directly so the drill-down link works while
+  // the subtask is still running, not only after renderSummary has output.
+  const subagentSessionId = block.toolName === 'task'
+    ? (block.toolMetadata?.sessionId ?? (summary?.type === 'task' ? summary.sessionId : null))
+    : (summary?.type === 'task' ? summary.sessionId : null)
   const accent = entry.color
 
   const result = block.toolResult || block.content
