@@ -2,6 +2,7 @@ import { apiClient } from '@/lib/apiClient'
 import { streamEvents } from '@/lib/sseClient'
 import { runtimeConfig } from '@/config/runtime'
 import {
+  finalizeStaleMessage,
   normalizeChat,
   normalizeMessage,
   toPromptPayload,
@@ -54,18 +55,26 @@ const adapter = {
 
     // Load messages from ravens
     if (chat) {
+      // Ask the backend whether this session is actually still running.
+      // After a page reload this decides between resuming live updates
+      // (busy) and settling stale in-progress states (idle).
+      let busy = false
+      try {
+        const statusMap = await apiClient.get('/session/status', { signal })
+        const statusType = statusMap?.[chatId]?.type
+        busy = statusType === 'busy' || statusType === 'retry'
+      } catch (_) {
+        // status endpoint unavailable — treat as idle
+      }
+      chat.isResponding = busy
+
       try {
         chat.messages = await fetchMessages(chatId, chat._directory)
-        // Fix up orphaned loading messages — if loaded from history
-        // (not actively streaming), finish:null messages should not
-        // appear as perpetually "loading".
-        if (chat.messages) {
-          chat.messages = chat.messages.map((msg) => {
-            if (msg.role === 'assistant' && msg.status === 'loading') {
-              return { ...msg, status: 'done' }
-            }
-            return msg
-          })
+        // Fix up orphaned in-progress states — but only when the session
+        // is NOT running. A busy session keeps its loading states and the
+        // caller resumes the SSE stream to receive live updates.
+        if (chat.messages && !busy) {
+          chat.messages = chat.messages.map(finalizeStaleMessage)
         }
         // Filter out reverted messages — the backend marks a revert point
         // on the session; messages with id >= revert.messageID are hidden
@@ -393,6 +402,14 @@ export async function replyPermission(requestID, reply, message) {
 export async function rejectPermission(requestID) {
   await apiClient.post(`/permission/${requestID}/reply`, { reply: 'reject' })
   return true
+}
+
+/**
+ * Re-attach to a session's live event stream — used after a page reload
+ * when the backend run is still in progress. Runs until aborted.
+ */
+export function resumeSessionStream({ directory, onEvent, signal }) {
+  return streamSessionEvents({ directory, onEvent, signal })
 }
 
 export async function getLlmConfig() {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { revertConversation } from './chats.service'
+import { resumeSessionStream, revertConversation } from './chats.service'
 import {
   applyPartDelta,
   applyPartTextDelta,
@@ -811,6 +811,9 @@ export function useChatModel(chatId) {
   const activeAbortControllerRef = useRef(null)
   const loadingStartRef = useRef(0)
   const minTimerRef = useRef(null)
+  // True while sendMessage owns its own SSE stream — blocks the resume
+  // effect below from opening a duplicate stream for the same run.
+  const localSendActiveRef = useRef(false)
 
   const finishLoading = useCallback((nextChat) => {
     if (nextChat !== undefined) setChat(nextChat)
@@ -935,10 +938,34 @@ export function useChatModel(chatId) {
     }
   }, [chatId])
 
+  // Resume live updates after a page reload while the backend run is
+  // still active: the send-time SSE stream died with the old page, so
+  // re-attach to the session's event stream until it reports idle/error.
+  const isResponding = Boolean(chat?.isResponding)
+  const directory = chat?._directory
+  useEffect(() => {
+    if (!chatId || chatId === 'new' || !isResponding || !directory) return undefined
+    if (localSendActiveRef.current) return undefined
+
+    const controller = new AbortController()
+    resumeSessionStream({
+      directory,
+      onEvent: (event) => {
+        if (event.data?.properties?.sessionID !== chatId) return
+        const updated = mutateCachedChat(chatId, (c) => applyOpenCodeEvent(c, event, null, null))
+        if (updated) setChat(updated)
+      },
+      signal: controller.signal,
+    })
+
+    return () => controller.abort()
+  }, [chatId, isResponding, directory])
+
   const sendMessage = useCallback(async (content, attachments = [], opts = {}) => {
     const trimmedContent = content.trim()
     if (!chatId || chatId === 'new' || (!trimmedContent && attachments.length === 0)) return null
     setError(null)
+    localSendActiveRef.current = true
 
     const now = Date.now()
     const optimisticUserId = createOptimisticId()
@@ -1046,6 +1073,8 @@ export function useChatModel(chatId) {
       }
       setError(getErrorMessage(nextError))
       return null
+    } finally {
+      localSendActiveRef.current = false
     }
   }, [chatId])
 
