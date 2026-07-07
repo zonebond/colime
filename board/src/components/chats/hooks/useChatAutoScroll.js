@@ -19,6 +19,14 @@ export default function useChatAutoScroll({
   const autoRef = useRef(undefined)
   const autoTimerRef = useRef(undefined)
 
+  // Programmatic smooth scrolls fire intermediate scroll events that look
+  // like user scrolling — suppress follow-cancellation until this time.
+  const smoothUntilRef = useRef(0)
+  // Streaming follow is throttled: batch growth into one smooth scroll
+  // every FOLLOW_INTERVAL instead of jumping on every delta.
+  const lastFollowRef = useRef(0)
+  const followTimerRef = useRef(null)
+
   const settlingRef = useRef(false)
   const settleTimerRef = useRef(undefined)
 
@@ -66,6 +74,7 @@ export default function useChatAutoScroll({
     markAuto(container)
 
     if (behavior === 'smooth') {
+      smoothUntilRef.current = Date.now() + 1200
       container.scrollTo({
         top: container.scrollHeight,
         behavior: 'smooth',
@@ -74,6 +83,27 @@ export default function useChatAutoScroll({
       container.scrollTop = container.scrollHeight
     }
   }, [scrollAreaRef, markAuto])
+
+  // Throttled smooth follow for streaming output: at most one smooth
+  // catch-up scroll per interval, so fast multi-line output batches into
+  // a fluid glide instead of per-delta jumps.
+  const FOLLOW_INTERVAL = 2000
+  const followBottom = useCallback(() => {
+    const now = Date.now()
+    const elapsed = now - lastFollowRef.current
+    if (elapsed >= FOLLOW_INTERVAL) {
+      lastFollowRef.current = now
+      scrollToBottom('smooth')
+      return
+    }
+    if (followTimerRef.current) return
+    followTimerRef.current = setTimeout(() => {
+      followTimerRef.current = null
+      if (!autoScrollRef.current) return
+      lastFollowRef.current = Date.now()
+      scrollToBottom('smooth')
+    }, FOLLOW_INTERVAL - elapsed)
+  }, [scrollToBottom])
 
   const autoScrollToBottom = useCallback((force = false) => {
     if (!force && !isActive()) return
@@ -181,6 +211,12 @@ export default function useChatAutoScroll({
       clearTimeout(settleTimerRef.current)
       settleTimerRef.current = undefined
     }
+    smoothUntilRef.current = 0
+    lastFollowRef.current = 0
+    if (followTimerRef.current) {
+      clearTimeout(followTimerRef.current)
+      followTimerRef.current = null
+    }
     setShowScrollButton(false)
     setComposerHeight(null)
     // Re-pin to the bottom over a short window instead of once: late
@@ -223,19 +259,34 @@ export default function useChatAutoScroll({
 
     updateComposerHeight()
 
-    const observer = new ResizeObserver(() => {
-      updateComposerHeight()
+    const observer = new ResizeObserver((entries) => {
+      let composerResized = false
+      let contentResized = false
+      for (const entry of entries) {
+        if (entry.target === composerEl) composerResized = true
+        if (entry.target === contentEl) contentResized = true
+      }
+      if (composerResized) updateComposerHeight()
+
       const container = scrollAreaRef.current
       if (container && !canScroll(container)) return
       if (!isActive()) return
       if (!autoScrollRef.current) return
-      scrollToBottom('auto')
+
+      // Composer growth shifts the viewport — re-pin instantly. Streaming
+      // content growth follows smoothly on a throttle so fast output
+      // batches into one glide instead of jumping per delta.
+      if (composerResized && !contentResized) {
+        scrollToBottom('auto')
+        return
+      }
+      followBottom()
     })
 
     if (composerEl) observer.observe(composerEl)
     if (contentEl) observer.observe(contentEl)
     return () => observer.disconnect()
-  }, [scrollToBottom, canScroll, isActive, composerWrapRef, contentRef, scrollAreaRef, chatId])
+  }, [scrollToBottom, followBottom, canScroll, isActive, composerWrapRef, contentRef, scrollAreaRef, chatId])
 
   // Maintain scroll position when composer height changes (e.g. user typing)
   useLayoutEffect(() => {
@@ -299,6 +350,11 @@ export default function useChatAutoScroll({
 
       if (autoScrollRef.current) {
         if (isActive() && distanceFromBottom(el) <= 2) return
+        // Our own scrollTo — content may have grown between the scroll and
+        // this event firing; don't mistake it for the user scrolling away.
+        if (isAuto(el)) return
+        // Mid-flight smooth animation events are programmatic too.
+        if (Date.now() < smoothUntilRef.current) return
         autoScrollRef.current = false
         setShowScrollButton(true)
       }
@@ -347,8 +403,18 @@ export default function useChatAutoScroll({
   const scrollToBottomSmooth = useCallback(() => {
     autoScrollRef.current = true
     setShowScrollButton(false)
+    // Sync the follow throttle so the observer doesn't immediately fire a
+    // second smooth scroll on top of this one.
+    lastFollowRef.current = Date.now()
     scrollToBottom('smooth')
-  }, [scrollToBottom])
+    // If content kept growing during the animation the target is stale —
+    // settle with a hard pin once the animation has had time to finish.
+    setTimeout(() => {
+      if (!autoScrollRef.current) return
+      const container = scrollAreaRef.current
+      if (container && distanceFromBottom(container) > 2) scrollToBottom('auto')
+    }, 750)
+  }, [scrollToBottom, scrollAreaRef, distanceFromBottom])
 
   return {
     showScrollButton,
