@@ -8,7 +8,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm run dev          # Vite dev server on port 3000
 npm run build        # Production build
 npm run lint         # ESLint — max-warnings 0, JS/JSX only
-npm test             # Node.js native test runner — tests/integration/*.test.js
+npm test             # Vitest — tests/unit/**/*.test.{js,jsx} (jsdom)
+npm run test:integration  # Node.js native test runner — tests/integration/*.test.js
 ```
 
 Backend: start ravens in HTTP serve mode (required for board to connect):
@@ -23,6 +24,10 @@ During local dev, Vite proxies:
 - `/ravens/*` → `http://127.0.0.1:5090` (prefix NOT stripped — ravens routes include the full path)
 
 In production (Docker), nginx proxies `/ravens/` → `runtime:4096/` with SSE support (86400s read timeout, no buffering).
+
+## Build Version Stamp
+
+Every build embeds the git SHA: check the browser console (`[board] build <sha>`), `window.__BOARD_BUILD__`, or fetch `/version.json` to confirm which commit a deployment was built from. Override with `VITE_GIT_SHA` env var when building outside a git checkout.
 
 ## Architecture
 
@@ -63,7 +68,7 @@ Board connects to ravens's `/event?directory=` SSE endpoint. Events arrive as `{
 - `session.status` — session lifecycle (busy → idle/error/retry)
 - `session.updated` — session metadata (title, path, timestamps)
 
-SSE events are filtered by `properties.sessionID` and applied via `applyRavensEvent()` in `chats.hooks.js`.
+SSE events are filtered by `properties.sessionID` and applied via `applyOpenCodeEvent()` in `chats.hooks.js`. The SSE transport lives in `src/lib/sseClient.js` (spec-compliant parser + auto-reconnect with backoff).
 
 ### State Management
 
@@ -80,7 +85,7 @@ Centralized HTTP client with circuit breaker, retry with exponential backoff (3 
 | File | Role |
 |---|---|
 | `src/App.jsx` | Root layout: Sidebar + all 10 routes (ChatPage is lazy-loaded) |
-| `src/components/chats/ChatPage.jsx` | Main chat UI — ~3000 LOC, most complex file |
+| `src/components/chats/ChatPage.jsx` | Main chat UI — ~1000 LOC, most complex page |
 | `src/features/chats/chats.hooks.js` | Chat state: cache, SSE events, optimistic mutations |
 | `src/features/chats/chats.service.js` | Ravens REST API adapter + SSE stream connection |
 | `src/features/chats/normalize.js` | Data mapping: ravens → board models |

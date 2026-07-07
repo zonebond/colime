@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom'
 import { memo, useEffect, useRef, useState } from 'react'
 import { Check, Copy, FileArrowDown, Lightning, SquaresFour, X } from '@phosphor-icons/react'
-import { getHighlighter, highlightSync } from '@/lib/highlight'
+import { ensureLanguage, highlightSync } from '@/lib/highlight'
 import sanitizeHtml from '@/lib/sanitize'
 import styles from './CodeBlock.module.css'
 
@@ -48,7 +48,7 @@ export default memo(function CodeBlock({ children, className, content, language:
   useEffect(() => {
     let cancelled = false
 
-    getHighlighter().then(() => {
+    ensureLanguage(language).then(() => {
       if (cancelled) return
       const result = highlightSync(codeText, language || 'text')
       if (!cancelled) setHighlighted(result)
