@@ -5,7 +5,7 @@ import os from "os"
 import path from "path"
 import { Config } from "@/config/config"
 import { Shell } from "../../src/shell/shell"
-import { ShellTool } from "../../src/tool/shell"
+import { ShellTool, sanitizedProcessEnv } from "../../src/tool/shell"
 import { Filesystem } from "@/util/filesystem"
 import { provideInstance, tmpdirScoped } from "../fixture/fixture"
 import type { Permission } from "../../src/permission"
@@ -1201,6 +1201,51 @@ describe("tool.shell truncation", () => {
         expect(lines[0]).toBe("1")
         expect(lines[lineCount - 1]).toBe(String(lineCount))
       }),
+    ),
+  )
+})
+
+describe("tool.shell env sanitization", () => {
+  const withEnv = (entries: Record<string, string>, body: () => void) => {
+    const saved: Record<string, string | undefined> = {}
+    for (const [name, value] of Object.entries(entries)) {
+      saved[name] = process.env[name]
+      process.env[name] = value
+    }
+    try {
+      body()
+    } finally {
+      for (const [name, value] of Object.entries(saved)) {
+        if (value === undefined) delete process.env[name]
+        else process.env[name] = value
+      }
+    }
+  }
+
+  it.live("strips secret-bearing variables and keeps the rest", () =>
+    Effect.sync(() =>
+      withEnv(
+        {
+          RAVENS_SERVER_PASSWORD: "hunter2",
+          ANTHROPIC_API_KEY: "sk-test",
+          AWS_SECRET_ACCESS_KEY: "aws-test",
+          GITHUB_TOKEN: "gh-test",
+          MY_APP_CREDENTIALS: "creds",
+          TOKENIZERS_PARALLELISM: "false",
+          SHELL_TEST_PLAIN: "plain",
+        },
+        () => {
+          const env = sanitizedProcessEnv()
+          expect(env.RAVENS_SERVER_PASSWORD).toBeUndefined()
+          expect(env.ANTHROPIC_API_KEY).toBeUndefined()
+          expect(env.AWS_SECRET_ACCESS_KEY).toBeUndefined()
+          expect(env.GITHUB_TOKEN).toBeUndefined()
+          expect(env.MY_APP_CREDENTIALS).toBeUndefined()
+          expect(env.TOKENIZERS_PARALLELISM).toBe("false")
+          expect(env.SHELL_TEST_PLAIN).toBe("plain")
+          expect(env.PATH).toBe(process.env.PATH)
+        },
+      ),
     ),
   )
 })

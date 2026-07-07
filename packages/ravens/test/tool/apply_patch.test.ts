@@ -530,4 +530,46 @@ EOF`
       expect(yield* readText(target)).toBe(`He said "hi"\nsome${emDash}dash\nend\n`)
     }),
   )
+
+  it.instance("rejects paths that traverse outside the project", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const { ctx, calls } = makeCtx()
+      const escaped = path.resolve(test.directory, "..", "escape.txt")
+
+      const patchText = "*** Begin Patch\n*** Add File: ../escape.txt\n+pwned\n*** End Patch"
+
+      yield* expectFailure(execute({ patchText }, ctx), "path escapes the project directory")
+      expect(calls.length).toBe(0)
+      yield* expectReadFailure(escaped)
+    }),
+  )
+
+  it.instance("rejects absolute paths", () =>
+    Effect.gen(function* () {
+      const { ctx, calls } = makeCtx()
+      const target = process.platform === "win32" ? "C:\\escape.txt" : "/tmp/apply-patch-escape.txt"
+
+      const patchText = `*** Begin Patch\n*** Add File: ${target}\n+pwned\n*** End Patch`
+
+      yield* expectFailure(execute({ patchText }, ctx), "path escapes the project directory")
+      expect(calls.length).toBe(0)
+    }),
+  )
+
+  it.instance("rejects move targets outside the project", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const { ctx, calls } = makeCtx()
+      const source = path.join(test.directory, "movable.txt")
+      yield* writeText(source, "line1\n")
+
+      const patchText =
+        "*** Begin Patch\n*** Update File: movable.txt\n*** Move to: ../moved.txt\n@@\n-line1\n+changed\n*** End Patch"
+
+      yield* expectFailure(execute({ patchText }, ctx), "path escapes the project directory")
+      expect(calls.length).toBe(0)
+      expect(yield* readText(source)).toBe("line1\n")
+    }),
+  )
 })

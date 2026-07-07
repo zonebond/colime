@@ -5,7 +5,9 @@ services:
       dockerfile: docker/Dockerfile.runtime
     environment:
       - RAVENS_CONFIG_DIR=/app/config
-      - RAVENS_SERVER_PASSWORD=${RAVENS_SERVER_PASSWORD:-nQ0oWPWrFCjyTsE91zfWBuEff27LSweb}
+      # Required — set it in .env or the shell; there is deliberately no default.
+      - RAVENS_SERVER_PASSWORD=${RAVENS_SERVER_PASSWORD:?RAVENS_SERVER_PASSWORD must be set}
+      - RAVENS_SERVER_USERNAME=${RAVENS_SERVER_USERNAME:-ravens}
     volumes:
       - ./data/runtime-config:/app/config
       - ./data/runtime-data:/root/.local/share/ravens
@@ -19,6 +21,11 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.webapp
+    environment:
+      # nginx prompts the browser for these same credentials and forwards them
+      # to the runtime, which validates them again.
+      - RAVENS_SERVER_PASSWORD=${RAVENS_SERVER_PASSWORD:?RAVENS_SERVER_PASSWORD must be set}
+      - RAVENS_SERVER_USERNAME=${RAVENS_SERVER_USERNAME:-ravens}
     ports:
       - "${WEBAPP_PORT:-5090}:80"
       - "${WEBAPP_HTTPS_PORT:-5443}:443"

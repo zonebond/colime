@@ -5,6 +5,17 @@ CERT_FILE="/etc/nginx/ssl/server.crt"
 KEY_FILE="/etc/nginx/ssl/server.key"
 NGINX_CONF="/etc/nginx/conf.d/default.conf"
 
+if [ -n "${RAVENS_SERVER_PASSWORD:-}" ]; then
+    echo "==> RAVENS_SERVER_PASSWORD set, enabling basic auth..."
+    AUTH_USER="${RAVENS_SERVER_USERNAME:-ravens}"
+    printf '%s:%s\n' "$AUTH_USER" "$(openssl passwd -apr1 "$RAVENS_SERVER_PASSWORD")" > /etc/nginx/.htpasswd
+    chmod 600 /etc/nginx/.htpasswd
+    sed -i 's|# auth_basic |auth_basic |' "$NGINX_CONF"
+    sed -i 's|# auth_basic_user_file |auth_basic_user_file |' "$NGINX_CONF"
+else
+    echo "==> WARNING: RAVENS_SERVER_PASSWORD not set — no client auth. Do not expose this port publicly."
+fi
+
 if [ -f "$CERT_FILE" ] && [ -f "$KEY_FILE" ]; then
     echo "==> SSL certificate found, enabling HTTPS..."
     sed -i 's/# listen 443 ssl;/listen 443 ssl;/' "$NGINX_CONF"

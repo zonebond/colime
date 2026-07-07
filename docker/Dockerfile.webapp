@@ -1,5 +1,8 @@
 FROM nginx:alpine
 
+# openssl is used by the entrypoint to generate the basic-auth htpasswd file
+RUN apk add --no-cache openssl
+
 COPY board/dist /usr/share/nginx/html
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker/webapp-entrypoint.sh /entrypoint.sh
