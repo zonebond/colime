@@ -156,7 +156,9 @@ export default function SessionFilesPanel({
           break
         }
         case 'pdf':
-        case 'image': {
+        case 'image':
+        case 'docx':
+        case 'sheet': {
           const blob = await downloadSessionFile(directory, filePath)
           const blobUrl = URL.createObjectURL(blob)
           onPreviewFile({ attachment: { ...attachment, file: { ...attachment.file, url: blobUrl } }, blobUrl, onDownload })

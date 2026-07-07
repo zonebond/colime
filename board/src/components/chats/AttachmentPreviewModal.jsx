@@ -1,19 +1,119 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Check, Copy, DownloadSimple, DotsThreeOutline, File, FilePdf, FileCsv, FileCode, FileText, X, Slideshow, ArrowsOutSimple, ArrowsInSimple } from '@phosphor-icons/react'
+import { Check, Copy, DownloadSimple, DotsThreeOutline, File, FilePdf, FileCsv, FileCode, FileDoc, FileText, FileXls, X, Slideshow, ArrowsOutSimple, ArrowsInSimple } from '@phosphor-icons/react'
 import { createPortal } from 'react-dom'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeSlug from 'rehype-slug'
+import DOMPurify from 'dompurify'
 import { useTranslation } from '@/i18n'
 import { AttachmentImage } from '@/components/attachments/AttachmentCard'
 import { getFileExtension } from './message-list/helpers'
 import styles from './AttachmentPreviewModal.module.css'
 
 const TYPE_ICON = {
-  pdf: FilePdf, csv: FileCsv, code: FileCode, text: FileText, markdown: FileText, file: File,
+  pdf: FilePdf, csv: FileCsv, code: FileCode, text: FileText, markdown: FileText, docx: FileDoc, sheet: FileXls, file: File,
 }
 const TYPE_LABEL = {
-  markdown: 'Markdown', code: 'Code', text: 'Text', csv: 'Spreadsheet', pdf: 'PDF Document', file: 'File',
+  markdown: 'Markdown', code: 'Code', text: 'Text', csv: 'Spreadsheet', pdf: 'PDF Document', docx: 'Word Document', sheet: 'Spreadsheet', file: 'File',
+}
+
+const SHEET_MAX_ROWS = 200
+
+/** Word (.docx) preview — converts to sanitized HTML via lazily-loaded mammoth. */
+function DocxView({ blobUrl, tc }) {
+  const [html, setHtml] = useState(null)
+  const [failed, setFailed] = useState(false)
+
+  useEffect(() => {
+    if (!blobUrl) return undefined
+    let cancelled = false
+    ;(async () => {
+      try {
+        const [mammoth, response] = await Promise.all([import('mammoth/mammoth.browser'), fetch(blobUrl)])
+        const arrayBuffer = await response.arrayBuffer()
+        const result = await (mammoth.default ?? mammoth).convertToHtml({ arrayBuffer })
+        if (!cancelled) setHtml(DOMPurify.sanitize(result.value))
+      } catch (_) {
+        if (!cancelled) setFailed(true)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [blobUrl])
+
+  if (failed) {
+    return <div className={styles.fileCenter}><div className={styles.fileCenterIcon}><FileDoc size={64} weight="fill" /></div><div className={styles.fileHint}>{tc.previewFailed || 'Preview failed. Download to view.'}</div></div>
+  }
+  if (html == null) {
+    return <div className={styles.fileCenter}><div className={styles.fileCenterIcon}><FileDoc size={64} weight="fill" /></div><div className={styles.fileHint}>{tc.previewLoading || 'Loading preview...'}</div></div>
+  }
+  return <div className={styles.docx} dangerouslySetInnerHTML={{ __html: html }} />
+}
+
+/** Excel (.xlsx/.xls) preview — parses via lazily-loaded SheetJS. */
+function SheetView({ blobUrl, tc }) {
+  const [workbook, setWorkbook] = useState(null)
+  const [failed, setFailed] = useState(false)
+  const [activeSheet, setActiveSheet] = useState(0)
+
+  useEffect(() => {
+    if (!blobUrl) return undefined
+    let cancelled = false
+    ;(async () => {
+      try {
+        const [XLSX, response] = await Promise.all([import('xlsx'), fetch(blobUrl)])
+        const arrayBuffer = await response.arrayBuffer()
+        const wb = XLSX.read(arrayBuffer, { type: 'array' })
+        const sheets = wb.SheetNames.map((name) => ({
+          name,
+          rows: XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, defval: '' }),
+        }))
+        if (!cancelled) setWorkbook(sheets)
+      } catch (_) {
+        if (!cancelled) setFailed(true)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [blobUrl])
+
+  if (failed) {
+    return <div className={styles.fileCenter}><div className={styles.fileCenterIcon}><FileXls size={64} weight="fill" /></div><div className={styles.fileHint}>{tc.previewFailed || 'Preview failed. Download to view.'}</div></div>
+  }
+  if (workbook == null) {
+    return <div className={styles.fileCenter}><div className={styles.fileCenterIcon}><FileXls size={64} weight="fill" /></div><div className={styles.fileHint}>{tc.previewLoading || 'Loading preview...'}</div></div>
+  }
+
+  const sheet = workbook[activeSheet] ?? workbook[0]
+  const rows = sheet?.rows ?? []
+  return (
+    <>
+      {workbook.length > 1 && (
+        <div className={styles.sheetTabs}>
+          {workbook.map((s, i) => (
+            <button
+              key={s.name}
+              type="button"
+              className={`${styles.sheetTab} ${i === activeSheet ? styles.sheetTabActive : ''}`}
+              onClick={() => setActiveSheet(i)}
+            >
+              {s.name}
+            </button>
+          ))}
+        </div>
+      )}
+      <div className={styles.tableWrap}>
+        <table className={styles.table}>
+          <tbody>
+            {rows.slice(0, SHEET_MAX_ROWS).map((row, i) => (
+              <tr key={i}>{row.map((cell, j) => <td key={j}>{String(cell)}</td>)}</tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {rows.length > SHEET_MAX_ROWS && (
+        <div className={styles.footer}>{(tc.sheetPreview || 'Showing first {max} rows of {count} rows').replace('{max}', String(SHEET_MAX_ROWS)).replace('{count}', String(rows.length))}</div>
+      )}
+    </>
+  )
 }
 
 function extractHeadings(container) {
@@ -241,6 +341,18 @@ export default function AttachmentPreviewModal({
                       )}
                     </>
                   ) : <div className={styles.fileCenter}><div className={styles.fileCenterIcon}><FileText size={64} weight="fill" /></div><div className={styles.fileHint}>Loading content...</div></div>}
+                </div>
+              )}
+              {/* Word document */}
+              {previewType === 'docx' && (
+                <div className={styles.contentWrap}>
+                  <DocxView blobUrl={blobUrl} tc={tc} />
+                </div>
+              )}
+              {/* Excel spreadsheet */}
+              {previewType === 'sheet' && (
+                <div className={styles.contentWrap}>
+                  <SheetView blobUrl={blobUrl} tc={tc} />
                 </div>
               )}
               {/* Fallback */}

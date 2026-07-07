@@ -1,10 +1,13 @@
-import { Check, CircleNotch, File, FileCode, FileCsv, FilePdf, FileText, MagnifyingGlass, WarningCircle } from '@phosphor-icons/react'
+import { Check, CircleNotch, File, FileCode, FileCsv, FileDoc, FilePdf, FileText, FileXls, MagnifyingGlass, WarningCircle } from '@phosphor-icons/react'
 import { memo, useEffect, useMemo, useState } from 'react'
 import styles from './AttachmentCard.module.css'
 
 const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico', 'tiff', 'tif', 'heic', 'avif']
 const MARKDOWN_EXTENSIONS = ['md', 'markdown']
 const CODE_EXTENSIONS = ['js', 'jsx', 'ts', 'tsx', 'py', 'java', 'c', 'cpp', 'h', 'go', 'rs', 'rb', 'php', 'swift', 'kt', 'sql', 'sh', 'bash', 'zsh', 'css', 'scss', 'less', 'html', 'xml', 'yaml', 'yml', 'toml', 'json', 'env']
+const TEXT_EXTENSIONS = ['txt', 'text', 'log', 'ini', 'conf', 'cfg', 'properties', 'gitignore', 'dockerignore', 'editorconfig', 'lock', 'tsv']
+const DOCX_EXTENSIONS = ['docx']
+const SHEET_EXTENSIONS = ['xlsx', 'xls']
 
 export function getAttachmentName(file) {
   return file?.name || file?.fileName || 'Untitled file'
@@ -20,12 +23,17 @@ export function getAttachmentPreviewType(file) {
   const ext = getAttachmentExtension(file)
 
   if (type.startsWith('image/') || (ext && IMAGE_EXTENSIONS.includes(ext))) return 'image'
-  if (type === 'application/pdf') return 'pdf'
+  if (type === 'application/pdf' || ext === 'pdf') return 'pdf'
   if (type === 'text/csv' || ext === 'csv') return 'csv'
   if (ext && MARKDOWN_EXTENSIONS.includes(ext)) return 'markdown'
+  if (ext && DOCX_EXTENSIONS.includes(ext)) return 'docx'
+  if (type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return 'docx'
+  if (ext && SHEET_EXTENSIONS.includes(ext)) return 'sheet'
+  if (type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || type === 'application/vnd.ms-excel') return 'sheet'
   if (type.startsWith('text/')) return 'text'
   if (type === 'application/json') return 'text'
   if (ext && CODE_EXTENSIONS.includes(ext)) return 'code'
+  if (ext && TEXT_EXTENSIONS.includes(ext)) return 'text'
   return 'file'
 }
 
@@ -33,6 +41,8 @@ function getAttachmentTypeIcon(previewType) {
   const iconMap = {
     pdf: FilePdf,
     csv: FileCsv,
+    docx: FileDoc,
+    sheet: FileXls,
     code: FileCode,
     text: FileText,
     markdown: FileText,

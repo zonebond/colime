@@ -68,6 +68,7 @@ export default function ChatPage() {
   const [previewAttachment, setPreviewAttachment] = useState(null)
   const [sessionFilePreview, setSessionFilePreview] = useState(null)
   const [previewContent, setPreviewContent] = useState(null)
+  const [previewBlobUrl, setPreviewBlobUrl] = useState(null)
   const [codeCopied, setCodeCopied] = useState(false)
   const [showModelDropdown, setShowModelDropdown] = useState(false)
   const [showAgentSelector, setShowAgentSelector] = useState(false)
@@ -437,7 +438,16 @@ export default function ChatPage() {
 
   const handlePreviewAttachment = async (file) => {
     const previewType = getAttachmentPreviewType(file)
-    if (previewType === 'image' || previewType === 'file') {
+    if (previewType === 'pdf' || previewType === 'docx' || previewType === 'sheet') {
+      // Binary formats render from a blob URL, not text content
+      setPreviewContent(null)
+      try {
+        const blob = getAttachmentBlob(file)
+        setPreviewBlobUrl(blob ? URL.createObjectURL(blob) : null)
+      } catch (_) {
+        setPreviewBlobUrl(null)
+      }
+    } else if (previewType === 'image' || previewType === 'file') {
       setPreviewContent(null)
     } else {
       try {
@@ -460,6 +470,8 @@ export default function ChatPage() {
   const handleClosePreview = () => {
     setPreviewAttachment(null)
     setPreviewContent(null)
+    if (previewBlobUrl) URL.revokeObjectURL(previewBlobUrl)
+    setPreviewBlobUrl(null)
     setCodeCopied(false)
   }
 
@@ -1013,6 +1025,7 @@ export default function ChatPage() {
         <AttachmentPreviewModal
           attachment={previewAttachment}
           content={previewContent}
+          blobUrl={previewBlobUrl}
           codeCopied={codeCopied}
           onClose={handleClosePreview}
           onCopyCode={handleCopyCode}
