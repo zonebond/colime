@@ -1,6 +1,7 @@
 import { memo, useMemo } from 'react'
 import UserMessageRow from './UserMessageRow'
 import AssistantMessageRow from './AssistantMessageRow'
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import { isContextTool } from '../content-blocks/ContextToolGroup'
 import styles from './VirtualMessageList.module.css'
 
@@ -275,28 +276,30 @@ const VirtualMessageList = memo(function VirtualMessageList({ messages, tc, focu
                 <span>{formatDateGroup(message.createdAt)}</span>
               </div>
             )}
-            {message.role === 'user' ? (
-              <UserMessageRow
-                message={message}
-                tc={tc}
-                models={models}
-                onPreviewAttachment={onPreviewAttachment}
-                onResetToHere={onResetToHere}
-                isReverting={isReverting}
-              />
-            ) : (
-              <AssistantMessageRow
-                message={message}
-                tc={tc}
-                models={models}
-                onConfirmTool={onConfirmTool}
-                onRetryTool={onRetryTool}
-                isLastMessage={isLastMessage}
-                groupFiles={groupFiles}
-                onViewAllFiles={onViewAllFiles}
-                onPreviewSessionFile={onPreviewSessionFile}
-              />
-            )}
+            <ErrorBoundary variant="inline" resetKey={message.id}>
+              {message.role === 'user' ? (
+                <UserMessageRow
+                  message={message}
+                  tc={tc}
+                  models={models}
+                  onPreviewAttachment={onPreviewAttachment}
+                  onResetToHere={onResetToHere}
+                  isReverting={isReverting}
+                />
+              ) : (
+                <AssistantMessageRow
+                  message={message}
+                  tc={tc}
+                  models={models}
+                  onConfirmTool={onConfirmTool}
+                  onRetryTool={onRetryTool}
+                  isLastMessage={isLastMessage}
+                  groupFiles={groupFiles}
+                  onViewAllFiles={onViewAllFiles}
+                  onPreviewSessionFile={onPreviewSessionFile}
+                />
+              )}
+            </ErrorBoundary>
           </div>
         )
       })}

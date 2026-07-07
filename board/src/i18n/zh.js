@@ -441,8 +441,11 @@ export const zh = {
     gatheringContext: '探索中',
     gatheredContext: '已探索',
     contextReadCount: '{{count}} 次读取',
+    contextReadCount_other: '{{count}} 次读取',
     contextSearchCount: '{{count}} 次搜索',
+    contextSearchCount_other: '{{count}} 次搜索',
     contextListCount: '{{count}} 次列表',
+    contextListCount_other: '{{count}} 次列表',
     toolStep: '工具',
     toolCalling: '调用',
     inProgress: '进行中',
@@ -527,5 +530,9 @@ export const zh = {
     patchActionModified: '修改',
     fileAccordionExpand: '展开',
     fileAccordionCollapse: '折叠',
+  },
+  errorBoundary: {
+    title: '渲染此视图时出现问题。',
+    retry: '重试',
   },
 }

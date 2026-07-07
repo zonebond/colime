@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 import Sidebar from '@/components/sidebar/Sidebar'
 import ChatsPage from '@/components/chats/ChatsPage'
 
@@ -26,6 +27,7 @@ function ChatPageSuspense() {
 }
 
 export default function App() {
+  const location = useLocation()
   const hasHydrated = useAppStore((state) => state.hasHydrated)
   const rawTheme = useAppStore((state) => state.theme)
   const searchModalOpen = useAppStore((state) => state.searchModalOpen)
@@ -54,6 +56,7 @@ export default function App() {
     <div className={styles.layout} data-theme={theme}>
       <Sidebar isOpen={isOpen} onToggle={toggle} />
       <main className={styles.main}>
+        <ErrorBoundary resetKey={location.pathname}>
         <Routes>
           <Route path="/" element={<Navigate to="/chats" replace />} />
           <Route path="/chats" element={<ChatsPage />} />
@@ -69,6 +72,7 @@ export default function App() {
           <Route path="/toolbox" element={<ToolboxPage />} />
           <Route path="/help" element={<Help />} />
         </Routes>
+        </ErrorBoundary>
       </main>
       {searchModalOpen && <SearchModal />}
     </div>
