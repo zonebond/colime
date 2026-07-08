@@ -9,6 +9,8 @@ export const en = {
     tasks: 'Tasks',
     library: 'Library',
     recents: 'Recents',
+    untitledChat: 'Untitled chat',
+    chatRunning: 'Responding',
     openSidebar: 'Open sidebar',
     closeSidebar: 'Close sidebar',
   },

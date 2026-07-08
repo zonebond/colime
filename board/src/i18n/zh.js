@@ -9,6 +9,8 @@ export const zh = {
     tasks: '任务',
     library: '资源库',
     recents: '最近',
+    untitledChat: '未命名会话',
+    chatRunning: '回复中',
     openSidebar: '打开侧边栏',
     closeSidebar: '关闭侧边栏',
   },
