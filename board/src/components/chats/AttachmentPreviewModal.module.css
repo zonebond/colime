@@ -32,11 +32,6 @@
   animation: modalIn 200ms cubic-bezier(0.34, 1.2, 0.64, 1);
 }
 
-/* Hide typeBar for markdown */
-.modal[data-type="markdown"] .typeBar {
-  display: none;
-}
-
 @keyframes modalIn {
   from {
     opacity: 0;
@@ -114,73 +109,17 @@
   min-height: 0;
 }
 
-.typeBar {
+/* Compact type badge in the header — replaces the old full-width type bar */
+.typeChip {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 10px 20px;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(12px);
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  color: var(--primary, #3b82f6);
+  background: color-mix(in srgb, var(--primary, #3b82f6) 10%, transparent);
   flex-shrink: 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-}
-
-.typeBar::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--border), transparent);
-}
-
-.typeLeft {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.typeIcon {
-  display: flex;
-  align-items: center;
-  color: var(--primary);
-  margin-right: 6px;
-}
-
-.typeLabel {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--primary);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.copyBtn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border: none;
-  border-radius: 6px;
-  background: #f4f4f5;
-  color: var(--txt2);
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 150ms ease, color 150ms ease;
-}
-
-.copyBtn:hover {
-  background: var(--hover);
-  color: var(--txt1);
-}
-
-.copyBtn:active {
-  transform: scale(0.98);
 }
 
 .contentWrap {
@@ -871,4 +810,25 @@
   color: var(--txt1);
   font-weight: 500;
   background: var(--surface);
+}
+
+/* Shiki-highlighted code preview — aligns with the line-number gutter */
+.codeHighlighted {
+  flex: 1;
+  overflow: auto;
+}
+
+.codeHighlighted pre {
+  margin: 0;
+  padding: 16px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: transparent !important;
+}
+
+.codeHighlighted code {
+  font-family: inherit;
 }

@@ -847,6 +847,7 @@ export default function ChatPage() {
           <ChatNavRail
             messages={messages}
             onScrollToMessage={scrollToMessage}
+            onScrollToBottom={scrollToBottomSmooth}
             focusedIndex={focusedIndex}
             activeMessageIndex={navRailActiveIndex}
           />
