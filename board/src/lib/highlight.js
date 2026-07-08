@@ -3,6 +3,31 @@ let engineModule = null
 let initPromise = null
 let currentTheme = 'catppuccin-latte'
 
+// File extensions that map onto a differently-named grammar.
+const LANG_ALIASES = {
+  mjs: 'javascript',
+  cjs: 'javascript',
+  h: 'c',
+  hpp: 'cpp',
+  cc: 'cpp',
+  csproj: 'xml',
+  vbproj: 'xml',
+  fsproj: 'xml',
+  props: 'xml',
+  targets: 'xml',
+  ps1: 'powershell',
+  psm1: 'powershell',
+  cmd: 'bat',
+  gradle: 'groovy',
+  cshtml: 'razor',
+  fs: 'fsharp',
+}
+
+function normalizeLang(lang) {
+  const key = (lang || '').toLowerCase()
+  return LANG_ALIASES[key] ?? key
+}
+
 export async function getHighlighter() {
   if (highlighter) return highlighter
   if (initPromise) return initPromise
@@ -25,7 +50,7 @@ export async function ensureLanguage(lang) {
   const h = await getHighlighter()
   if (!lang) return h
 
-  const key = lang.toLowerCase()
+  const key = normalizeLang(lang)
   if (h.getLoadedLanguages().includes(key)) return h
 
   const loader = engineModule.LANG_LOADERS[key]
@@ -42,7 +67,7 @@ export function setHighlightTheme(isDark) {
 
 export function highlightSync(code, lang) {
   if (!highlighter) return null
-  const key = lang ? lang.toLowerCase() : 'text'
+  const key = lang ? normalizeLang(lang) : 'text'
   // 'text' is shiki's built-in plaintext language, always available.
   const safeLang = highlighter.getLoadedLanguages().includes(key) ? key : 'text'
   return highlighter.codeToHtml(code, { lang: safeLang, theme: currentTheme })

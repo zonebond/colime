@@ -56,6 +56,18 @@ export const LANG_LOADERS = {
   regex: () => import('shiki/langs/regexp.mjs'),
   make: () => import('shiki/langs/make.mjs'),
   makefile: () => import('shiki/langs/make.mjs'),
+  vb: () => import('shiki/langs/vb.mjs'),
+  fsharp: () => import('shiki/langs/fsharp.mjs'),
+  powershell: () => import('shiki/langs/powershell.mjs'),
+  bat: () => import('shiki/langs/bat.mjs'),
+  groovy: () => import('shiki/langs/groovy.mjs'),
+  dart: () => import('shiki/langs/dart.mjs'),
+  scala: () => import('shiki/langs/scala.mjs'),
+  vue: () => import('shiki/langs/vue.mjs'),
+  svelte: () => import('shiki/langs/svelte.mjs'),
+  proto: () => import('shiki/langs/proto.mjs'),
+  r: () => import('shiki/langs/r.mjs'),
+  razor: () => import('shiki/langs/razor.mjs'),
 }
 
 export async function createEngine() {
