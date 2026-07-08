@@ -4,7 +4,7 @@ import styles from './AttachmentCard.module.css'
 
 const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico', 'tiff', 'tif', 'heic', 'avif']
 const MARKDOWN_EXTENSIONS = ['md', 'markdown']
-const CODE_EXTENSIONS = ['js', 'jsx', 'ts', 'tsx', 'py', 'java', 'c', 'cpp', 'h', 'go', 'rs', 'rb', 'php', 'swift', 'kt', 'sql', 'sh', 'bash', 'zsh', 'css', 'scss', 'less', 'html', 'xml', 'yaml', 'yml', 'toml', 'json', 'env']
+const CODE_EXTENSIONS = ['js', 'jsx', 'ts', 'tsx', 'mjs', 'cjs', 'py', 'java', 'c', 'cpp', 'cc', 'h', 'hpp', 'go', 'rs', 'rb', 'php', 'swift', 'kt', 'sql', 'sh', 'bash', 'zsh', 'css', 'scss', 'less', 'html', 'xml', 'yaml', 'yml', 'toml', 'json', 'env', 'cs', 'csproj', 'vb', 'vbproj', 'fs', 'fsproj', 'sln', 'props', 'targets', 'ps1', 'psm1', 'bat', 'cmd', 'gradle', 'dart', 'scala', 'groovy', 'vue', 'svelte', 'proto', 'r', 'razor', 'cshtml', 'lua', 'vim']
 const TEXT_EXTENSIONS = ['txt', 'text', 'log', 'ini', 'conf', 'cfg', 'properties', 'gitignore', 'dockerignore', 'editorconfig', 'lock', 'tsv']
 const DOCX_EXTENSIONS = ['docx']
 const SHEET_EXTENSIONS = ['xlsx', 'xls']
