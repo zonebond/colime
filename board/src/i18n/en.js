@@ -8,6 +8,7 @@ export const en = {
     projects: 'Projects',
     tasks: 'Tasks',
     library: 'Library',
+    pinned: 'Pinned',
     recents: 'Recents',
     untitledChat: 'Untitled chat',
     chatRunning: 'Responding',

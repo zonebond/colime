@@ -8,6 +8,7 @@ export const zh = {
     projects: '项目',
     tasks: '任务',
     library: '资源库',
+    pinned: '已置顶',
     recents: '最近',
     untitledChat: '未命名会话',
     chatRunning: '回复中',

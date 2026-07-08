@@ -46,13 +46,41 @@ export default function Sidebar({ isOpen, onToggle }) {
   const popover = usePopover()
   const { chats } = useChatsModel()
 
-  // Pinned first, then most recently active; hide archived and subtask
-  // child sessions.
-  const recentChats = useMemo(() => {
+  // Pinned sessions get their own group; Recents shows the rest by
+  // last activity. Archived and subtask child sessions are hidden.
+  const { pinnedChats, recentChats } = useMemo(() => {
     const list = (chats ?? []).filter((c) => !c.isArchived && !c._parentID)
-    list.sort((a, b) => (Number(b.isPinned) - Number(a.isPinned)) || (b.lastActiveAt - a.lastActiveAt))
-    return list.slice(0, RECENT_LIMIT)
+    list.sort((a, b) => b.lastActiveAt - a.lastActiveAt)
+    return {
+      pinnedChats: list.filter((c) => c.isPinned),
+      recentChats: list.filter((c) => !c.isPinned).slice(0, RECENT_LIMIT),
+    }
   }, [chats])
+
+  const renderChatRow = (chat, { inPinnedGroup = false } = {}) => {
+    const isActive = location.pathname === `/chats/${chat.id}`
+    return (
+      <div
+        key={chat.id}
+        className={[styles.recentRow, isActive ? styles.recentActive : ''].join(' ')}
+        onClick={() => navigate(`/chats/${chat.id}`)}
+        role="link"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') navigate(`/chats/${chat.id}`)
+        }}
+      >
+        {chat.isResponding && <span className={styles.recentRunningDot} aria-label={t('sidebar.chatRunning')} />}
+        {!chat.isResponding && !inPinnedGroup && chat.isPinned && (
+          <span className={styles.recentPin}><IconPin isPinned /></span>
+        )}
+        <span className={styles.recentTitle} title={chat.preview || undefined}>
+          {chat.title || t('sidebar.untitledChat')}
+        </span>
+        <span className={styles.recentTime}>{formatRelativeTime(chat.lastActiveAt, locale)}</span>
+      </div>
+    )
+  }
   const openSearchModal = useAppStore((s) => s.openSearchModal)
   const searchModalOpen = useAppStore((s) => s.searchModalOpen)
 
@@ -160,33 +188,17 @@ export default function Sidebar({ isOpen, onToggle }) {
           )
         })}
 
+        {!isClosed && pinnedChats.length > 0 && (
+          <div className={styles.recentsSection}>
+            <div className={styles.sectionLabel}>{t('sidebar.pinned')}</div>
+            {pinnedChats.map((chat) => renderChatRow(chat, { inPinnedGroup: true }))}
+          </div>
+        )}
+
         {!isClosed && recentChats.length > 0 && (
           <div className={styles.recentsSection}>
             <div className={styles.sectionLabel}>{t('sidebar.recents')}</div>
-            {recentChats.map((chat) => {
-              const isActive = location.pathname === `/chats/${chat.id}`
-              return (
-                <div
-                  key={chat.id}
-                  className={[styles.recentRow, isActive ? styles.recentActive : ''].join(' ')}
-                  onClick={() => navigate(`/chats/${chat.id}`)}
-                  role="link"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') navigate(`/chats/${chat.id}`)
-                  }}
-                >
-                  {chat.isResponding && <span className={styles.recentRunningDot} aria-label={t('sidebar.chatRunning')} />}
-                  {!chat.isResponding && chat.isPinned && (
-                    <span className={styles.recentPin}><IconPin isPinned /></span>
-                  )}
-                  <span className={styles.recentTitle} title={chat.preview || undefined}>
-                    {chat.title || t('sidebar.untitledChat')}
-                  </span>
-                  <span className={styles.recentTime}>{formatRelativeTime(chat.lastActiveAt, locale)}</span>
-                </div>
-              )
-            })}
+            {recentChats.map((chat) => renderChatRow(chat))}
           </div>
         )}
       </nav>
