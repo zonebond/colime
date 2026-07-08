@@ -176,19 +176,14 @@ export default function Sidebar({ isOpen, onToggle }) {
                     if (e.key === 'Enter') navigate(`/chats/${chat.id}`)
                   }}
                 >
-                  <div className={styles.recentBody}>
-                    <div className={styles.recentTopRow}>
-                      {chat.isResponding && <span className={styles.recentRunningDot} aria-label={t('sidebar.chatRunning')} />}
-                      {!chat.isResponding && chat.isPinned && (
-                        <span className={styles.recentPin}><IconPin isPinned /></span>
-                      )}
-                      <span className={styles.recentTitle}>{chat.title || t('sidebar.untitledChat')}</span>
-                      <span className={styles.recentTime}>{formatRelativeTime(chat.lastActiveAt, locale)}</span>
-                    </div>
-                    {chat.preview && (
-                      <div className={styles.recentPreview}>{chat.preview}</div>
-                    )}
-                  </div>
+                  {chat.isResponding && <span className={styles.recentRunningDot} aria-label={t('sidebar.chatRunning')} />}
+                  {!chat.isResponding && chat.isPinned && (
+                    <span className={styles.recentPin}><IconPin isPinned /></span>
+                  )}
+                  <span className={styles.recentTitle} title={chat.preview || undefined}>
+                    {chat.title || t('sidebar.untitledChat')}
+                  </span>
+                  <span className={styles.recentTime}>{formatRelativeTime(chat.lastActiveAt, locale)}</span>
                 </div>
               )
             })}
