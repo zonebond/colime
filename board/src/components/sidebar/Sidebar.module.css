@@ -199,6 +199,58 @@ button:hover .newChatIcon { background: var(--theme-soft-2); }
   transition: background 0.13s, color 0.13s;
   gap: 4px;
 }
+
+.recentBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.recentTopRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.recentTime {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--txt3);
+  font-variant-numeric: tabular-nums;
+}
+
+.recentPreview {
+  font-size: 12px;
+  color: var(--txt3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 2px;
+}
+
+.recentPin {
+  display: flex;
+  align-items: center;
+  color: var(--txt3);
+  flex-shrink: 0;
+}
+
+.recentRunningDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #34c759;
+  flex-shrink: 0;
+  animation: recentDotPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes recentDotPulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 color-mix(in srgb, #34c759 35%, transparent); }
+  50% { opacity: 0.7; box-shadow: 0 0 0 4px color-mix(in srgb, #34c759 0%, transparent); }
+}
 .recentRow:hover { background: var(--hover); }
 .recentActive { background: var(--active); }
 

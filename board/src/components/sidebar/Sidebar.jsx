@@ -1,15 +1,16 @@
-import { useState, useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { usePopover } from '@/hooks/usePopover'
 import { useTranslation } from '@/i18n'
 import { useAppStore } from '@/store/useAppStore'
+import { useChatsModel } from '@/features/chats/chats.hooks'
 
 import NavRow from './NavRow'
 import UserPopover from './UserPopover'
 import {
   IconToggleSidebar, IconNewChat, IconSearch, IconToolbox,
   IconChats, IconProjects, IconWorkspace, IconAssets,
-  IconMore, IconUpDown, IconLogo,
+  IconPin, IconUpDown, IconLogo,
 } from '@/components/icons'
 import styles from './Sidebar.module.css'
 
@@ -20,18 +21,38 @@ const NAV_ITEMS_GROUP2 = [
   { id: 'library', i18nKey: 'sidebar.library', icon: IconAssets, path: '/library' },
 ]
 
-const RECENT_ITEMS = [
-  { id: 1, title: '个人 AI Agent 工作区应用设计' },
-  { id: 2, title: "Empathy's role in relationships" },
-  { id: 3, title: 'Q4 产品路线图规划' },
-]
+const RECENT_LIMIT = 8
+
+function formatRelativeTime(ts, locale) {
+  if (!ts) return ''
+  const diffSec = Math.round((ts - Date.now()) / 1000)
+  if (Math.abs(diffSec) < 60) return locale === 'zh' ? '刚刚' : 'now'
+  const rtf = new Intl.RelativeTimeFormat(locale === 'zh' ? 'zh-CN' : 'en', { numeric: 'always', style: 'narrow' })
+  const min = Math.round(diffSec / 60)
+  if (Math.abs(min) < 60) return rtf.format(min, 'minute')
+  const hr = Math.round(min / 60)
+  if (Math.abs(hr) < 24) return rtf.format(hr, 'hour')
+  const day = Math.round(hr / 24)
+  if (Math.abs(day) < 7) return rtf.format(day, 'day')
+  const week = Math.round(day / 7)
+  if (Math.abs(week) < 5) return rtf.format(week, 'week')
+  return rtf.format(Math.round(day / 30), 'month')
+}
 
 export default function Sidebar({ isOpen, onToggle }) {
-  const { t } = useTranslation()
+  const { t, locale } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
-  const [activeRecent, setActiveRecent] = useState(null)
   const popover = usePopover()
+  const { chats } = useChatsModel()
+
+  // Pinned first, then most recently active; hide archived and subtask
+  // child sessions.
+  const recentChats = useMemo(() => {
+    const list = (chats ?? []).filter((c) => !c.isArchived && !c._parentID)
+    list.sort((a, b) => (Number(b.isPinned) - Number(a.isPinned)) || (b.lastActiveAt - a.lastActiveAt))
+    return list.slice(0, RECENT_LIMIT)
+  }, [chats])
   const openSearchModal = useAppStore((s) => s.openSearchModal)
   const searchModalOpen = useAppStore((s) => s.searchModalOpen)
 
@@ -139,28 +160,38 @@ export default function Sidebar({ isOpen, onToggle }) {
           )
         })}
 
-        {!isClosed && (
+        {!isClosed && recentChats.length > 0 && (
           <div className={styles.recentsSection}>
             <div className={styles.sectionLabel}>{t('sidebar.recents')}</div>
-            {RECENT_ITEMS.map((item) => (
-              <div
-                key={item.id}
-                className={[styles.recentRow, activeRecent === item.id ? styles.recentActive : ''].join(' ')}
-                onClick={() => {
-                  setActiveRecent(item.id)
-                  navigate('/chats')
-                }}
-              >
-                <span className={styles.recentTitle}>{item.title}</span>
-                <button
-                  className={styles.recentMore}
-                  onClick={(e) => e.stopPropagation()}
-                  aria-label="More options"
+            {recentChats.map((chat) => {
+              const isActive = location.pathname === `/chats/${chat.id}`
+              return (
+                <div
+                  key={chat.id}
+                  className={[styles.recentRow, isActive ? styles.recentActive : ''].join(' ')}
+                  onClick={() => navigate(`/chats/${chat.id}`)}
+                  role="link"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') navigate(`/chats/${chat.id}`)
+                  }}
                 >
-                  <IconMore />
-                </button>
-              </div>
-            ))}
+                  <div className={styles.recentBody}>
+                    <div className={styles.recentTopRow}>
+                      {chat.isResponding && <span className={styles.recentRunningDot} aria-label={t('sidebar.chatRunning')} />}
+                      {!chat.isResponding && chat.isPinned && (
+                        <span className={styles.recentPin}><IconPin isPinned /></span>
+                      )}
+                      <span className={styles.recentTitle}>{chat.title || t('sidebar.untitledChat')}</span>
+                      <span className={styles.recentTime}>{formatRelativeTime(chat.lastActiveAt, locale)}</span>
+                    </div>
+                    {chat.preview && (
+                      <div className={styles.recentPreview}>{chat.preview}</div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )}
       </nav>
