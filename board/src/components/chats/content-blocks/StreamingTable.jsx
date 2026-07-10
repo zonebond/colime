@@ -13,10 +13,27 @@ export default memo(function StreamingTable({ content, prevContent }) {
   }
 
   const { preamble, headerCells, dataRows } = parsed
-  const prevDataRowCount = prevParsed?.dataRows?.length ?? 0
+
+  // parseTableContent puts every line after the separator into dataRows.
+  // The table actually ends at the first non-table line — everything from
+  // there on is regular markdown that must keep streaming below the table
+  // (it used to be dropped until the stream finished, then popped in all
+  // at once).
+  let tableEnd = dataRows.length
+  for (let i = 0; i < dataRows.length; i++) {
+    if (dataRows[i].trim() === '' || !isMarkdownTableRow(dataRows[i])) {
+      tableEnd = i
+      break
+    }
+  }
+  const rowLines = dataRows.slice(0, tableEnd)
+  const postamble = dataRows.slice(tableEnd).join('\n').replace(/^\n+/, '')
+  const tableIsTail = postamble === ''
+
+  const prevDataRowCount = prevParsed?.dataRows?.filter(isMarkdownTableRow)?.length ?? 0
 
   // Only render complete rows (must match |...| pattern)
-  const validRows = dataRows.filter(isMarkdownTableRow)
+  const validRows = rowLines.filter(isMarkdownTableRow)
 
   return (
     <div className={styles.tableWrapper}>
@@ -55,8 +72,10 @@ export default memo(function StreamingTable({ content, prevContent }) {
               >
                 {cells.map((cell, cellIndex) => {
                   // Only the last actually-streamed cell of the last row
-                  // gets the incremental text animation.
-                  const isStreamingCell = isLastRow && cellIndex === lastFilledIndex
+                  // gets the incremental text animation — and only while
+                  // the table is still the streaming tail (no content
+                  // after it yet).
+                  const isStreamingCell = tableIsTail && isLastRow && cellIndex === lastFilledIndex
                   if (isStreamingCell) {
                     const prevRow = prevParsed?.dataRows?.[rowIndex]
                     const prevCell = prevRow ? (parseTableRow(prevRow)[cellIndex] || '') : ''
@@ -75,6 +94,13 @@ export default memo(function StreamingTable({ content, prevContent }) {
           })}
         </tbody>
       </table>
+      {postamble ? (
+        <PacedMarkdown
+          content={postamble}
+          isStreaming
+          className={styles.tablePreamble}
+        />
+      ) : null}
     </div>
   )
 })

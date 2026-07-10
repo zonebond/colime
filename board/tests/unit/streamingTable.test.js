@@ -75,5 +75,23 @@ describe('streaming table recognition', () => {
       expect(isMarkdownTableRow(streamingRow)).toBe(true)
       expect(parseTableRow(streamingRow)).toEqual(['3', '4'])
     })
+
+    it('content after the table stays separable from table rows', () => {
+      // Mirrors StreamingTable's split: the table ends at the first
+      // blank/non-row line; everything after must be preserved so it can
+      // keep streaming as regular markdown below the table.
+      const content = '| A | B |\n|---|---|\n| 1 | 2 |\n\n**为什么** 后面还有正文'
+      const parsed = parseTableContent(content)
+      const dataRows = parsed.dataRows
+      let tableEnd = dataRows.length
+      for (let i = 0; i < dataRows.length; i++) {
+        if (dataRows[i].trim() === '' || !isMarkdownTableRow(dataRows[i])) {
+          tableEnd = i
+          break
+        }
+      }
+      expect(dataRows.slice(0, tableEnd)).toEqual(['| 1 | 2 |'])
+      expect(dataRows.slice(tableEnd).join('\n').replace(/^\n+/, '')).toBe('**为什么** 后面还有正文')
+    })
   })
 })
