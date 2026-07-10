@@ -104,13 +104,20 @@ export default function useChatAutoScroll({
         followLastSetRef.current = -1
         return
       }
-      // Someone else moved the scroll position between frames (scrollbar
-      // drag, keyboard) — the user took over, stop following.
-      if (followLastSetRef.current >= 0 && Math.abs(el.scrollTop - followLastSetRef.current) > 4) {
-        followLastSetRef.current = -1
-        autoScrollRef.current = false
-        setShowScrollButton(true)
-        return
+      // Only meaningful upward movement counts as user takeover. Downward
+      // shifts and small wobbles come from browser reflow — most visibly
+      // during streaming markdown tables, where each new row recomputes
+      // column widths and overflow-anchor bumps scrollTop up by 10–20px
+      // to keep the visible content stable. Treating that as "user
+      // scrolled" was cancelling follow mid-stream.
+      if (followLastSetRef.current >= 0) {
+        const delta = el.scrollTop - followLastSetRef.current
+        if (delta < -30) {
+          followLastSetRef.current = -1
+          autoScrollRef.current = false
+          setShowScrollButton(true)
+          return
+        }
       }
 
       const target = el.scrollHeight - el.clientHeight
@@ -381,6 +388,12 @@ export default function useChatAutoScroll({
         // Frames written by the follow chase are ours; genuine takeover is
         // detected inside the chase loop itself.
         if (followAnimRef.current || followLastSetRef.current >= 0) return
+        // Downward drift from our last pin is browser reflow, not the user:
+        // streaming tables recompute column widths per row and the scroll
+        // anchor bumps scrollTop to keep content visually stable. Only an
+        // upward move away from the pin means the user scrolled back.
+        const lastPin = autoRef.current
+        if (lastPin && Date.now() - lastPin.time <= 1500 && el.scrollTop >= lastPin.top - 2) return
         autoScrollRef.current = false
         setShowScrollButton(true)
       }
