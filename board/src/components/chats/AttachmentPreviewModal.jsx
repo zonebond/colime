@@ -22,6 +22,21 @@ const TYPE_LABEL = {
 
 const SHEET_MAX_ROWS = 200
 
+const REMARK_PLUGINS = [remarkGfm]
+const REHYPE_PLUGINS = [rehypeSlug]
+
+// Module-level so the component identity is stable across re-renders.
+// An inline object here made React remount every CodeBlock whenever the
+// modal re-rendered (e.g. hovering the outline toggles state), resetting
+// their highlight state — visible as a flash/jump of code and ASCII blocks.
+const MARKDOWN_COMPONENTS = {
+  pre: ({ children }) => {
+    const codeChild = Array.isArray(children) ? children[0] : children
+    const codeClassName = codeChild?.props?.className || ''
+    return <CodeBlock className={codeClassName}>{codeChild?.props?.children || children}</CodeBlock>
+  },
+}
+
 /** Word (.docx) preview — converts to sanitized HTML via lazily-loaded mammoth. */
 function DocxView({ blobUrl, tc }) {
   const [html, setHtml] = useState(null)
@@ -338,15 +353,9 @@ export default function AttachmentPreviewModal({
                     <>
                       <div className={styles.markdown} ref={mdRef}>
                         <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          rehypePlugins={[rehypeSlug]}
-                          components={{
-                            pre: ({ children }) => {
-                              const codeChild = Array.isArray(children) ? children[0] : children
-                              const codeClassName = codeChild?.props?.className || ''
-                              return <CodeBlock className={codeClassName}>{codeChild?.props?.children || children}</CodeBlock>
-                            },
-                          }}
+                          remarkPlugins={REMARK_PLUGINS}
+                          rehypePlugins={REHYPE_PLUGINS}
+                          components={MARKDOWN_COMPONENTS}
                         >{content}</ReactMarkdown>
                       </div>
                       {hasOutline && (
