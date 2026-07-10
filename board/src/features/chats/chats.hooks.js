@@ -299,7 +299,7 @@ function replaceCachedChat(tempId, nextChat) {
 // Optimistic Message Helpers
 // ═══════════════════════════════════════════════════════════════════════
 
-function createOptimisticAssistantMessage(id, now) {
+function createOptimisticAssistantMessage(id, now, directory = null) {
   return {
     id,
     role: 'assistant',
@@ -308,6 +308,9 @@ function createOptimisticAssistantMessage(id, now) {
     contentBlocks: [],
     createdAt: now,
     _parts: [],
+    // Session directory — streamed file blocks resolve on-disk paths
+    // against it, so it must be present before the final message arrives.
+    _directory: directory,
   }
 }
 
@@ -702,7 +705,7 @@ export function useChatsModel() {
         const now = Date.now()
 
         const userMsg = createOptimisticUserMessage(optimisticUserId, input.userPrompt || '', input.attachments || [], now)
-        const asstMsg = createOptimisticAssistantMessage(optimisticAsstId, now + 1)
+        const asstMsg = createOptimisticAssistantMessage(optimisticAsstId, now + 1, chat._directory)
 
         // Update cache with optimistic messages
         mutateCachedChat(chat.id, (c) => ({
@@ -979,7 +982,7 @@ export function useChatModel(chatId) {
           messages: [
             ...(previousChat.messages ?? []),
             createOptimisticUserMessage(optimisticUserId, trimmedContent, attachments, now),
-            createOptimisticAssistantMessage(optimisticAsstId, now + 1),
+            createOptimisticAssistantMessage(optimisticAsstId, now + 1, previousChat._directory),
           ],
           lastActiveAt: now,
           isResponding: true,

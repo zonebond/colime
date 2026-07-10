@@ -150,13 +150,17 @@ export default memo(function AssistantMessageRow({ message, tc, models, onConfir
   const handlePreview = useCallback(async (e, file) => {
     e.stopPropagation()
     const pType = getAttachmentPreviewType({ name: file.fileName, type: '' })
+    // Fall back to the bare filename (session files live at the session
+    // root) and the row's directory when disk resolution hasn't landed yet.
+    const filePath = file.filePath || file.fileName
+    const directory = file._directory || message._directory
 
     // Build base attachment shape
     const attachment = { file: { name: file.fileName }, previewType: pType }
 
     // Download action for the modal
     const onDownload = async () => {
-      const blob = await downloadSessionFile(file._directory, file.filePath)
+      const blob = await downloadSessionFile(directory, filePath)
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
@@ -171,14 +175,14 @@ export default memo(function AssistantMessageRow({ message, tc, models, onConfir
         case 'markdown':
         case 'csv': {
           // Full file for markdown (rendering) and csv (need 20+ lines)
-          const blob = await downloadSessionFile(file._directory, file.filePath)
+          const blob = await downloadSessionFile(directory, filePath)
           const text = await blob.text()
           onPreviewSessionFile({ attachment, content: text, onDownload, truncated: false })
           break
         }
         case 'code':
         case 'text': {
-          const result = await previewSessionFile(file._directory, file.filePath, 64000)
+          const result = await previewSessionFile(directory, filePath, 64000)
           onPreviewSessionFile({ attachment, content: result.text, onDownload, truncated: result.truncated })
           break
         }
@@ -186,7 +190,7 @@ export default memo(function AssistantMessageRow({ message, tc, models, onConfir
         case 'image':
         case 'docx':
         case 'sheet': {
-          const blob = await downloadSessionFile(file._directory, file.filePath)
+          const blob = await downloadSessionFile(directory, filePath)
           const blobUrl = URL.createObjectURL(blob)
           onPreviewSessionFile({ attachment: { ...attachment, file: { ...attachment.file, url: blobUrl } }, blobUrl, onDownload })
           break

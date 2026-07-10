@@ -159,7 +159,11 @@ export const ravensAdapter = {
         signal: abortController.signal,
       })
       // response is { info: Message, parts: Part[] }
-      const message = normalizeMessage(response)
+      // Pass the session directory through — file blocks resolve their
+      // on-disk paths against it, and this message replaces the optimistic
+      // one in the cache (a missing directory left freshly-produced file
+      // cards unclickable until a full reload).
+      const message = normalizeMessage(response, 0, input.directory)
       return message
     } finally {
       postSettled = true
