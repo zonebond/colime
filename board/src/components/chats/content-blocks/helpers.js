@@ -26,17 +26,39 @@ export function parseUrlSegments(text) {
   return segments
 }
 
+/**
+ * Split a markdown table row into cells. Tolerates rows that are still
+ * being streamed — the trailing '|' may be absent, in which case the
+ * unfinished last cell is preserved as-is instead of being sliced off.
+ */
 export function parseTableRow(rowStr) {
-  const cells = rowStr.split('|').slice(1, -1).map(cell => cell.trim())
-  return cells
+  let s = rowStr.trim()
+  if (s.startsWith('|')) s = s.slice(1)
+  if (s.endsWith('|')) s = s.slice(0, -1)
+  return s.split('|').map((cell) => cell.trim())
 }
 
+/**
+ * Whether a line looks like a markdown table row. Streaming-tolerant:
+ * the closing '|' is not required so the actively-streaming last row
+ * still counts (previously it disappeared until its trailing pipe arrived).
+ */
 export function isMarkdownTableRow(str) {
-  return /^\|.*\|$/.test(str.trim())
+  const t = str.trim()
+  return t.length > 1 && t.startsWith('|')
 }
 
+/**
+ * Whether a line looks like a markdown table separator. Recognizes
+ * partial separators too (e.g. '|-' before the rest of the dashes and
+ * pipes arrive), which lets the table renderer switch on earlier and
+ * reduces the visible text→table flip.
+ */
 export function isTableSeparator(str) {
-  return /^\|[\s\-|:]+$/.test(str.trim())
+  const t = str.trim()
+  if (!t.startsWith('|')) return false
+  const body = t.slice(1)
+  return body.length > 0 && /^[\s\-|:]+$/.test(body) && body.includes('-')
 }
 
 export function hasTableStructure(content) {

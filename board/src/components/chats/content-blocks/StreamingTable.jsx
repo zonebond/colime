@@ -37,9 +37,16 @@ export default memo(function StreamingTable({ content, prevContent }) {
         </thead>
         <tbody className={styles.streamingTableBody}>
           {validRows.map((row, rowIndex) => {
-            const cells = parseTableRow(row)
+            const rawCells = parseTableRow(row)
+            // Pad the row to the column count so the last cell (which may
+            // still be streaming) doesn't create a jagged table layout
+            // that reflows every keystroke.
+            const cells = rawCells.slice(0, headerCells.length)
+            while (cells.length < headerCells.length) cells.push('')
+
             const isNewRow = rowIndex >= prevDataRowCount
             const isLastRow = rowIndex === validRows.length - 1
+            const lastFilledIndex = Math.max(0, rawCells.length - 1)
 
             return (
               <tr
@@ -47,11 +54,12 @@ export default memo(function StreamingTable({ content, prevContent }) {
                 className={`${styles.streamingTableRow}${isNewRow ? ` ${styles.rowNew}` : ''}`}
               >
                 {cells.map((cell, cellIndex) => {
-                  const isLastCell = isLastRow && cellIndex === cells.length - 1
-                  if (isLastCell) {
-                    const prevCell = prevParsed?.dataRows?.[rowIndex]
-                      ? (parseTableRow(prevParsed.dataRows[rowIndex])[cellIndex] || '')
-                      : ''
+                  // Only the last actually-streamed cell of the last row
+                  // gets the incremental text animation.
+                  const isStreamingCell = isLastRow && cellIndex === lastFilledIndex
+                  if (isStreamingCell) {
+                    const prevRow = prevParsed?.dataRows?.[rowIndex]
+                    const prevCell = prevRow ? (parseTableRow(prevRow)[cellIndex] || '') : ''
                     return (
                       <td key={cellIndex} className={styles.streamingTableCell}>
                         <StreamingText content={cell} prevContent={prevCell} />
