@@ -29,6 +29,11 @@ const CHATS_STALE_TIME = 30_000
 // Cache System
 // ═══════════════════════════════════════════════════════════════════════
 
+// Chat IDs with a send-time SSE stream currently open (module-level so
+// both send flows — useChatModel.sendMessage and useChatsModel.createChat —
+// and the resume-stream effect all see the same registry).
+const activeLocalSends = new Set()
+
 const chatsCache = {
   data: null,
   error: null,
@@ -730,6 +735,11 @@ export function useChatsModel() {
           )
         }
 
+        // Register the send BEFORE navigation mounts useChatModel for the
+        // new chat — its resume-stream effect must not open a second SSE
+        // stream on top of this one (deltas would apply twice and corrupt
+        // the streamed text).
+        activeLocalSends.add(chat.id)
         sendChatMessageAndLoad(chat.id, {
           content: input.userPrompt || '',
           attachments: input.attachments || [],
@@ -763,6 +773,8 @@ export function useChatsModel() {
             return
           }
           setChatsError(getErrorMessage(error))
+        }).finally(() => {
+          activeLocalSends.delete(chat.id)
         })
       }
 
@@ -822,9 +834,6 @@ export function useChatModel(chatId) {
   const activeAbortControllerRef = useRef(null)
   const loadingStartRef = useRef(0)
   const minTimerRef = useRef(null)
-  // True while sendMessage owns its own SSE stream — blocks the resume
-  // effect below from opening a duplicate stream for the same run.
-  const localSendActiveRef = useRef(false)
 
   const finishLoading = useCallback((nextChat) => {
     if (nextChat !== undefined) setChat(nextChat)
@@ -956,7 +965,10 @@ export function useChatModel(chatId) {
   const directory = chat?._directory
   useEffect(() => {
     if (!chatId || chatId === 'new' || !isResponding || !directory) return undefined
-    if (localSendActiveRef.current) return undefined
+    // A send-time SSE stream already covers this run (possibly started by
+    // the createChat flow in a different hook) — a second stream would
+    // apply every text delta twice and interleave/corrupt the content.
+    if (activeLocalSends.has(chatId)) return undefined
 
     const controller = new AbortController()
     resumeSessionStream({
@@ -976,7 +988,7 @@ export function useChatModel(chatId) {
     const trimmedContent = content.trim()
     if (!chatId || chatId === 'new' || (!trimmedContent && attachments.length === 0)) return null
     setError(null)
-    localSendActiveRef.current = true
+    activeLocalSends.add(chatId)
 
     const now = Date.now()
     const optimisticUserId = createOptimisticId()
@@ -1087,7 +1099,7 @@ export function useChatModel(chatId) {
       setError(getErrorMessage(nextError))
       return null
     } finally {
-      localSendActiveRef.current = false
+      activeLocalSends.delete(chatId)
     }
   }, [chatId])
 
