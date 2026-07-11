@@ -4,6 +4,7 @@ import {
   applyPartDelta,
   applyPartTextDelta,
   finalizeMessage,
+  finalizeStaleMessage,
   normalizeMessage,
 } from './normalize'
 import {
@@ -469,11 +470,15 @@ function applyOpenCodeEvent(chat, event, optimisticAsstId, optimisticUserId) {
         return {
           ...chat,
           isResponding: false,
+          // The run is over — settle message status AND any tool/subtask
+          // blocks still marked running. Their completion events may have
+          // been lost across an SSE reconnect, and nothing else corrects
+          // them until a full reload.
           messages: chat.messages.map((msg) => {
-            if (msg.role === 'assistant' && msg.status === 'loading') {
-              return finalizeMessage(msg, { error: statusError, finish: 'error' })
-            }
-            return msg
+            const finalized = msg.role === 'assistant' && msg.status === 'loading'
+              ? finalizeMessage(msg, { error: statusError, finish: 'error' })
+              : msg
+            return finalizeStaleMessage(finalized)
           }),
         }
       }
@@ -483,10 +488,10 @@ function applyOpenCodeEvent(chat, event, optimisticAsstId, optimisticUserId) {
           ...chat,
           isResponding: false,
           messages: chat.messages.map((msg) => {
-            if (msg.role === 'assistant' && msg.status === 'loading') {
-              return finalizeMessage(msg, { finish: 'stop' })
-            }
-            return msg
+            const finalized = msg.role === 'assistant' && msg.status === 'loading'
+              ? finalizeMessage(msg, { finish: 'stop' })
+              : msg
+            return finalizeStaleMessage(finalized)
           }),
         }
       }
@@ -742,10 +747,13 @@ export function useChatsModel() {
             mutateCachedChat(chat.id, (c) => ({
               ...c,
               isResponding: false,
+              // The POST resolving means the run is definitively over —
+              // settle any blocks still marked running in earlier step
+              // messages whose completion events were lost mid-stream.
               messages: c.messages.map((m) => {
                 if (m.id === optimisticAsstId) return result
                 if (m.id === optimisticUserId && parentID) return { ...m, id: parentID }
-                return m
+                return finalizeStaleMessage(m)
               }),
             }))
           }
@@ -1044,10 +1052,12 @@ export function useChatModel(chatId) {
         mutateCachedChat(chatId, (c) => ({
           ...c,
           isResponding: false,
+          // Run definitively over — settle stray running blocks in earlier
+          // step messages (their completion events may have been lost).
           messages: c.messages.map((m) => {
             if (m.id === optimisticAsstId) return result
             if (m.id === optimisticUserId && parentID) return { ...m, id: parentID }
-            return m
+            return finalizeStaleMessage(m)
           }),
         }))
         resultRef.current = result
