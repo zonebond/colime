@@ -1,4 +1,4 @@
-# 附件上传后端设计(v3 — 会话目录直存)
+# 附件上传后端设计(v3.1 — 会话目录直存)
 
 **状态**: 已定稿方向
 **取代**: v2(独立存储区+物化)与 minimal attachment service(MinIO)—— 两者的存储层均被本方案取代
@@ -23,21 +23,35 @@
 
 ```
 {sessionDir}/attachments/{filename}          # 会话附件
-{dataRoot}/storage/labels/{labelId}/         # 项目(label)附件
-{sessionDir}/project-files -> 上述 label 目录  # 项目内会话通过 symlink 访问(约定只读)
+{dataRoot}/storage/groups/{labelId}/         # 项目组(group)附件 —— 归属 group 自身,与任何 chat 无关
+{sessionDir}/group-files -> 上述 group 目录   # 由每次 prompt 时的"成员对账"维护(见 2.1)
 ```
 
 - 同名冲突: 追加序号后缀(report.pdf → report-2.pdf)
-- 项目附件访问采用 symlink(零复制);Agent 约定不修改 project-files 下内容(系统提示注入)
+- Agent 约定不修改 group-files 下内容(系统提示注入)
+
+### 2.1 group 成员关系是动态的 —— 每次 prompt 时对账
+
+group 只是逻辑分组(labelId),chat 可随时加入/移出。因此 group 资源的可见性**不在会话创建时固化**,而是每次 prompt 开始时做一次幂等对账:
+
+1. 读取会话**当前** labelId
+2. 有 group 且 group 目录非空 → 确保 `{sessionDir}/group-files` symlink 指向当前 group 目录
+3. 已移出 group → 删除 symlink;换组 → 重指向
+4. file 端点访问 group 文件时按"该会话此刻的 labelId"做访问校验
+
+语义: 成员关系变化在下一次对话立即生效;历史消息中已内联的内容不追溯(发送当时是合法访问)。
+
+> 实现检查点: ravens 文件工具带路径穿越防护,需确认对"会话目录内指向 group 目录的 symlink"放行;若不放行,改为将 group 目录加入该会话的工具路径白名单(语义等价,二选一)。
 
 ## 3. API(仅新增两个上传端点)
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
 | POST | `/session/:id/attachment` | multipart,写入 {sessionDir}/attachments/,返回 {name,path,size,mime} |
-| POST | `/label/:id/attachment` | multipart,写入 label 目录 |
+| POST | `/label/:id/attachment` | multipart,写入 group 目录 |
+| GET | `/label/:id/attachment` | 项目页文件列表(项目页无会话上下文,不走 /file) |
 
-列表/下载/预览/删除全部复用现有 `/file` 端点(带 sessionID 与 Range 支持)。项目文件列表用 /file 于 label 目录(或轻量新增 GET /label/:id/attachment)。
+会话内的列表/下载/预览/删除复用现有 `/file` 端点(带 sessionID 与 Range 支持)。
 
 ## 4. 消息引用与模型消费(与存储无关,仍必须做)
 
@@ -63,12 +77,14 @@ ravens 收到 prompt 后按 mime 改写 part:
 1. `uploadChatAttachment` → XHR multipart 到 `POST /session/:id/attachment`(进度 UI 已存在,直接接线)
 2. `toPromptPayload` file part → 相对路径,弃用 blob: URL
 3. ProjectDetailPage 上传 → `POST /label/:id/attachment`;文件列表/删除复用 /file
-4. 边界: 新会话先创建再上传(现有流程已如此);上传中禁止发送该附件
+4. **new chat 无会话时的上传 —— 延迟上传**: `/chats/new` 尚无会话 ID 与工作目录,此时选择的附件停留在本地草稿态(现有 draft/进度 UI 复用),发送流水线变为: **创建会话 → 逐个上传(展示进度) → 发送消息**。任一附件上传失败则标红可重试并阻止发送,不做静默丢弃。已有会话维持"选中即上传"。
+   - 否决的替代: 选附件即建会话(产生无对话的幽灵会话)、服务端临时暂存区(多一套搬运机制)
+5. 上传中禁止发送该附件
 
 ## 6. 分期
 
 | 期 | 内容 |
 |---|---|
-| **P1** | POST /session/:id/attachment + 发送时 part 改写 + 前端接线 → chat 附件端到端可用 |
-| **P2** | label 目录 + symlink + 项目页上传/列表 |
+| **P1** | POST /session/:id/attachment + 发送时 part 改写 + 前端接线(含 new chat 延迟上传流水线) → chat 附件端到端可用 |
+| **P2** | group 目录 + 每 prompt 成员对账(symlink/白名单) + 项目页上传/列表 |
 | **P3**(如有需要) | 配额/类型限制、去重、若未来多实例部署再评估对象存储 |
