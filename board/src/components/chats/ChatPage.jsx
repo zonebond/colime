@@ -11,7 +11,7 @@ import { useAppStore } from '@/store/useAppStore'
 import { useChatModel, useChatsModel } from '@/features/chats/chats.hooks'
 import { useProviderModels } from '@/features/chats/useProviderModels'
 import { useChatAgent } from '@/features/chats/useChatAgent'
-import { stopChatMessage, uploadChatAttachment, confirmToolCall, listQuestions, replyQuestion, rejectQuestion, replyPermission, rejectPermission } from '@/features/chats/chats.service'
+import { stopChatMessage, uploadChatAttachment, confirmToolCall, downloadSessionFile, listQuestions, replyQuestion, rejectQuestion, replyPermission, rejectPermission } from '@/features/chats/chats.service'
 import { reloadSkills } from '@/features/toolbox/toolbox.service'
 import { useProjectsModel } from '@/features/projects/projects.hooks'
 import { useFavoriteModelsModel } from '@/features/toolbox/toolbox.hooks'
@@ -446,12 +446,31 @@ export default function ChatPage() {
   }, [attachments.length, startAttachmentUpload])
 
   const handlePreviewAttachment = async (file) => {
-    const previewType = getAttachmentPreviewType(file)
+    let effectiveFile = file
+
+    // Server-stored attachment (uploaded into the session directory) with
+    // no local blob and no fetchable URL — pull the bytes back through
+    // /file/download so every preview type below has a real source.
+    const hasLocalSource = Boolean(getAttachmentBlob(file))
+      || (typeof file?.url === 'string' && file.url && !file.url.startsWith('file:'))
+    if (!hasLocalSource && file?.serverPath && chat?._directory) {
+      try {
+        const blob = await downloadSessionFile(chat._directory, file.serverPath)
+        effectiveFile = {
+          ...file,
+          fileBlob: new File([blob], file.name || 'file', { type: file.type || blob.type }),
+        }
+      } catch (err) {
+        console.error('Failed to download attachment:', err)
+      }
+    }
+
+    const previewType = getAttachmentPreviewType(effectiveFile)
     if (previewType === 'pdf' || previewType === 'docx' || previewType === 'sheet') {
       // Binary formats render from a blob URL, not text content
       setPreviewContent(null)
       try {
-        const blob = getAttachmentBlob(file)
+        const blob = getAttachmentBlob(effectiveFile)
         setPreviewBlobUrl(blob ? URL.createObjectURL(blob) : null)
       } catch (_) {
         setPreviewBlobUrl(null)
@@ -460,14 +479,14 @@ export default function ChatPage() {
       setPreviewContent(null)
     } else {
       try {
-        const content = await readFileContent(file)
+        const content = await readFileContent(effectiveFile)
         setPreviewContent(content)
       } catch (err) {
         console.error('Failed to read file:', err)
         setPreviewContent(null)
       }
     }
-    setPreviewAttachment({ file, previewType })
+    setPreviewAttachment({ file: effectiveFile, previewType })
   }
 
   const handleSessionFilePreview = useCallback((preview) => setSessionFilePreview(preview), [])

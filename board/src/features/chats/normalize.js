@@ -89,7 +89,7 @@ export function normalizeMessage({ info, parts }, index = 0, directory = null) {
     errorCode: info.error?.name ?? null,
     contentBlocks,
     stopReason: info.finish ?? null,
-    attachments: extractAttachments(parts),
+    attachments: extractAttachments(parts, directory),
     createdAt: ts(info.time?.created ?? Date.now() + index),
     completedAt: info.time?.completed ?? null,
     // Agent / model info for footer display
@@ -211,17 +211,31 @@ function extractText(parts) {
     .trim()
 }
 
-function extractAttachments(parts) {
+function extractAttachments(parts, directory) {
   if (!Array.isArray(parts)) return []
   return parts
     .filter((p) => p.type === 'file')
-    .map((p) => ({
-      id: p.id,
-      name: p.filename ?? '',
-      type: p.mime ?? 'application/octet-stream',
-      size: p.size ?? 0,
-      url: p.url ?? null,
-    }))
+    .map((p) => {
+      const att = {
+        id: p.id,
+        name: p.filename ?? '',
+        type: p.mime ?? 'application/octet-stream',
+        size: p.size ?? 0,
+        url: p.url ?? null,
+      }
+      // Uploaded attachments come back from ravens as file:// URLs into the
+      // session directory — browsers refuse to fetch those. Convert to a
+      // serverPath so previews go through /file/download instead.
+      if (typeof att.url === 'string' && att.url.startsWith('file://')) {
+        const abs = att.url.slice('file://'.length).split('/').map((seg) => {
+          try { return decodeURIComponent(seg) } catch (_) { return seg }
+        }).join('/')
+        const dir = directory ? directory.replace(/\/+$/, '') + '/' : null
+        att.serverPath = dir && abs.startsWith(dir) ? abs.slice(dir.length) : abs
+        att.url = null
+      }
+      return att
+    })
 }
 
 function extractReferences(parts) {
