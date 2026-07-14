@@ -114,6 +114,7 @@ export const ravensAdapter = {
       attachments: input.attachments,
       agentId: input.agentId,
       model: input.model,
+      directory: input.directory,
     })
 
     // Start SSE stream for real-time events during prompt execution.

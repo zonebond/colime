@@ -271,7 +271,29 @@ export function toSessionUpdate({ title, archived, groupPath }) {
  * Open endpoint: POST /session/:id/message
  * Body: SessionPrompt.PromptInput — { prompt: Part[] }
  */
-export function toPromptPayload({ content, attachments, agentId, model }) {
+const MEDIA_INLINE_LIMIT = 8 * 1024 * 1024
+const TEXTLIKE_EXTENSIONS = new Set([
+  'txt', 'md', 'markdown', 'csv', 'tsv', 'log', 'json', 'yaml', 'yml', 'toml', 'xml',
+  'js', 'jsx', 'ts', 'tsx', 'py', 'java', 'c', 'cpp', 'h', 'go', 'rs', 'rb', 'php',
+  'sh', 'css', 'html', 'sql', 'ini', 'conf', 'cs', 'vb', 'env',
+])
+
+function isMediaMime(mime) {
+  return typeof mime === 'string' && (mime.startsWith('image/') || mime === 'application/pdf')
+}
+
+function isTextLike(att) {
+  if (typeof att.type === 'string' && (att.type.startsWith('text/') || att.type === 'application/json')) return true
+  const ext = (att.name ?? '').split('.').pop()?.toLowerCase()
+  return ext ? TEXTLIKE_EXTENSIONS.has(ext) : false
+}
+
+function fileUrlFor(directory, relPath) {
+  const abs = `${directory.replace(/\/+$/, '')}/${relPath}`
+  return 'file://' + abs.split('/').map(encodeURIComponent).join('/')
+}
+
+export function toPromptPayload({ content, attachments, agentId, model, directory }) {
   const parts = []
 
   if (content?.trim()) {
@@ -280,6 +302,36 @@ export function toPromptPayload({ content, attachments, agentId, model }) {
 
   if (Array.isArray(attachments)) {
     for (const att of attachments) {
+      // Uploaded attachments live in the session directory — hand ravens a
+      // file:// URL so its prompt pipeline inlines media as data: URLs and
+      // text through the Read tool (with truncation). blob: URLs are
+      // browser-local and were never resolvable server-side.
+      if (att.serverPath && directory) {
+        const mime = att.type ?? 'application/octet-stream'
+        if (isMediaMime(mime) && (att.size ?? 0) <= MEDIA_INLINE_LIMIT) {
+          parts.push({
+            type: 'file',
+            filename: att.name,
+            mime,
+            url: fileUrlFor(directory, att.serverPath),
+          })
+        } else if (isTextLike(att)) {
+          // text/plain routes through ravens' Read-tool inlining
+          parts.push({
+            type: 'file',
+            filename: att.name,
+            mime: 'text/plain',
+            url: fileUrlFor(directory, att.serverPath),
+          })
+        } else {
+          parts.push({
+            type: 'text',
+            text: `[Attachment] ${att.name} (${mime}, ${att.size ?? 0} bytes) is saved at ${att.serverPath} in the session directory — use your file tools to read or process it.`,
+          })
+        }
+        continue
+      }
+
       parts.push({
         type: 'file',
         filename: att.name,

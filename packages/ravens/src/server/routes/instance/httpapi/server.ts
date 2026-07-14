@@ -69,6 +69,7 @@ import { controlHandlers } from "./handlers/control"
 import { documentHandlers } from "./handlers/document"
 import { experimentalHandlers } from "./handlers/experimental"
 import { fileDownloadRoute } from "./handlers/file-download"
+import { fileUploadRoute } from "./handlers/file-upload"
 import { fileHandlers } from "./handlers/file"
 import { globalHandlers } from "./handlers/global"
 import { instanceHandlers } from "./handlers/instance"
@@ -158,7 +159,7 @@ const instanceApiRoutes = HttpApiBuilder.layer(InstanceHttpApi).pipe(
   ]),
 )
 
-const rawInstanceRoutes = Layer.mergeAll(ptyConnectRoute, fileDownloadRoute).pipe(Layer.provide(instanceRouterLayer))
+const rawInstanceRoutes = Layer.mergeAll(ptyConnectRoute, fileDownloadRoute, fileUploadRoute).pipe(Layer.provide(instanceRouterLayer))
 const instanceRoutes = Layer.mergeAll(rawInstanceRoutes, instanceApiRoutes).pipe(
   Layer.provide([
     httpApiAuthLayer,

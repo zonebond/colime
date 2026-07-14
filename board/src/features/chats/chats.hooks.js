@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { resumeSessionStream, revertConversation } from './chats.service'
+import { resumeSessionStream, revertConversation, uploadChatAttachment } from './chats.service'
 import {
   applyPartDelta,
   applyPartTextDelta,
@@ -740,15 +740,29 @@ export function useChatsModel() {
         // stream on top of this one (deltas would apply twice and corrupt
         // the streamed text).
         activeLocalSends.add(chat.id)
-        sendChatMessageAndLoad(chat.id, {
-          content: input.userPrompt || '',
-          attachments: input.attachments || [],
-          agentId: input.agentId,
-          model: (input.providerId || input.modelId) ? { providerID: input.providerId, modelID: input.modelId } : undefined,
-          directory: chat._directory,
-          onEvent,
-          onAbortController: (ctrl) => { createChatAbortRef.current = ctrl },
-        }).then((result) => {
+        ;(async () => {
+          // Deferred uploads: attachments picked on /chats/new before the
+          // session (and its working directory) existed. Upload them into
+          // the freshly created session, then send the message referencing
+          // their on-disk paths.
+          let attachments = input.attachments || []
+          if (attachments.some((a) => a?.fileBlob && !a.serverPath)) {
+            attachments = await Promise.all(attachments.map(async (a) => {
+              if (!a?.fileBlob || a.serverPath) return a
+              const uploaded = await uploadChatAttachment(chat.id, a.fileBlob)
+              return { ...a, name: uploaded.name, size: uploaded.size, serverPath: uploaded.serverPath }
+            }))
+          }
+          return sendChatMessageAndLoad(chat.id, {
+            content: input.userPrompt || '',
+            attachments,
+            agentId: input.agentId,
+            model: (input.providerId || input.modelId) ? { providerID: input.providerId, modelID: input.modelId } : undefined,
+            directory: chat._directory,
+            onEvent,
+            onAbortController: (ctrl) => { createChatAbortRef.current = ctrl },
+          })
+        })().then((result) => {
           // Sync IDs and finalize — result is the complete assistant message
           // from POST /message. If SSE events already populated content, merge
           // preserves it; otherwise result fills in the response.
