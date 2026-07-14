@@ -30,9 +30,12 @@ export function getAttachmentPreviewType(file) {
   if (type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return 'docx'
   if (ext && SHEET_EXTENSIONS.includes(ext)) return 'sheet'
   if (type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || type === 'application/vnd.ms-excel') return 'sheet'
+  // Extension wins over the generic text/* mime: browsers report .html as
+  // text/html, .css as text/css etc. — those should get code highlighting,
+  // not the plain-text view.
+  if (ext && CODE_EXTENSIONS.includes(ext)) return 'code'
   if (type.startsWith('text/')) return 'text'
   if (type === 'application/json') return 'text'
-  if (ext && CODE_EXTENSIONS.includes(ext)) return 'code'
   if (ext && TEXT_EXTENSIONS.includes(ext)) return 'text'
   return 'file'
 }
