@@ -83,15 +83,42 @@ export async function editChatMessage(_chatId, _messageId, _newContent) {
   return null
 }
 
-export async function uploadChatAttachment(_chatId, fileBlob, { onProgress } = {}) {
-  // Ravens has no dedicated file upload — return local blob reference
-  if (onProgress) onProgress(100)
+/**
+ * Upload an attachment into the session's working directory
+ * (POST /file/upload → {sessionDir}/attachments/). Uses XHR for upload
+ * progress events. Returns the attachment shape used by the composer,
+ * with `serverPath` carrying the session-relative path on disk.
+ */
+export async function uploadChatAttachment(chatId, fileBlob, { onProgress } = {}) {
+  const base = runtimeConfig.apiBaseUrl
+  const params = new URLSearchParams({ filename: fileBlob?.name ?? 'file' })
+  if (chatId && chatId !== 'new') params.set('sessionID', chatId)
+
+  const result = await new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', `${base}/file/upload?${params.toString()}`)
+    xhr.responseType = 'json'
+    if (xhr.upload && onProgress) {
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100))
+      }
+    }
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300 && xhr.response) resolve(xhr.response)
+      else reject(new Error(`Upload failed: ${xhr.status}`))
+    }
+    xhr.onerror = () => reject(new Error('Upload failed: network error'))
+    xhr.send(fileBlob)
+  })
+
   return {
     id: `att-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-    name: fileBlob?.name ?? 'file',
-    type: fileBlob?.type ?? 'application/octet-stream',
-    size: fileBlob?.size ?? 0,
+    name: result.name ?? fileBlob?.name ?? 'file',
+    type: fileBlob?.type || result.mime || 'application/octet-stream',
+    size: result.size ?? fileBlob?.size ?? 0,
+    // Local blob URL only for in-browser preview of the draft
     url: fileBlob ? URL.createObjectURL(fileBlob) : null,
+    serverPath: result.path,
   }
 }
 

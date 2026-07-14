@@ -364,7 +364,16 @@ export default function ChatPage() {
   }, [])
 
   const startAttachmentUpload = useCallback(async (draft) => {
-    if (!chat?.id || !draft.fileBlob) {
+    if (!draft.fileBlob) {
+      return
+    }
+
+    if (!chat?.id) {
+      // New chat — no session (and no session directory) exists yet.
+      // The upload is deferred: createChat uploads the kept fileBlob
+      // right after the session is created. Settle the draft so send
+      // isn't blocked waiting on a spinner that will never finish.
+      updateAttachmentDraft(draft.localId, { uploadStatus: null, uploadProgress: 0 })
       return
     }
 
@@ -531,6 +540,10 @@ export default function ChatPage() {
             size: attachment.size,
             url: attachment.url,
             previewUrl: attachment.previewUrl,
+            // Deferred upload: createChat uploads fileBlob into the new
+            // session's directory before sending the first prompt.
+            fileBlob: attachment.fileBlob,
+            serverPath: attachment.serverPath,
           })),
           agentId: selectedAgentId,
           providerId: effectiveProviderId,
@@ -581,6 +594,7 @@ export default function ChatPage() {
         size: attachment.size,
         url: attachment.url,
         previewUrl: attachment.previewUrl,
+        serverPath: attachment.serverPath,
       })), {
         agentId: selectedAgentId,
         providerId: effectiveProviderId,
