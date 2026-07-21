@@ -409,11 +409,13 @@ export default function ChatPage() {
 
   const handleAddFiles = useCallback((files) => {
     const maxFiles = 5
-    const maxSize = 500 * 1024 * 1024
+    // Matches the ravens upload endpoint's 50MB cap — reject client-side
+    // instead of failing mid-upload with an opaque 413.
+    const maxSize = 50 * 1024 * 1024
 
     const validFiles = files.filter((file) => {
       if (file.size > maxSize) {
-        setToastMessage(`File "${file.name}" exceeds 500MB limit`)
+        setToastMessage(`File "${file.name}" exceeds 50MB limit`)
         return false
       }
       return true

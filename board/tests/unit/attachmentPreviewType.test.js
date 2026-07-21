@@ -26,8 +26,21 @@ describe('getAttachmentPreviewType', () => {
     expect(byName('data.csv')).toBe('csv')
   })
 
+  it('classifies compressed bundles as archive (never previewed)', () => {
+    expect(byName('archive.zip')).toBe('archive')
+    expect(byName('backup.tar.gz')).toBe('archive')
+    expect(byName('data.tgz')).toBe('archive')
+    expect(byName('release.7z')).toBe('archive')
+    expect(byName('old.rar')).toBe('archive')
+  })
+
+  it('code extensions win over the generic text/* mime', () => {
+    expect(getAttachmentPreviewType({ name: 'page.html', type: 'text/html' })).toBe('code')
+    expect(getAttachmentPreviewType({ name: 'style.css', type: 'text/css' })).toBe('code')
+    expect(getAttachmentPreviewType({ name: 'note.txt', type: 'text/plain' })).toBe('text')
+  })
+
   it('falls back to file for unknown types', () => {
-    expect(byName('archive.zip')).toBe('file')
     expect(byName('binary.exe')).toBe('file')
   })
 })
