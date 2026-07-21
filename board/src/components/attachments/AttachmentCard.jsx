@@ -1,4 +1,4 @@
-import { Check, CircleNotch, File, FileCode, FileCsv, FileDoc, FilePdf, FileText, FileXls, MagnifyingGlass, WarningCircle } from '@phosphor-icons/react'
+import { Check, CircleNotch, File, FileCode, FileCsv, FileDoc, FilePdf, FileText, FileXls, FileZip, MagnifyingGlass, WarningCircle } from '@phosphor-icons/react'
 import { memo, useEffect, useMemo, useState } from 'react'
 import styles from './AttachmentCard.module.css'
 
@@ -8,6 +8,9 @@ const CODE_EXTENSIONS = ['js', 'jsx', 'ts', 'tsx', 'mjs', 'cjs', 'py', 'java', '
 const TEXT_EXTENSIONS = ['txt', 'text', 'log', 'ini', 'conf', 'cfg', 'properties', 'gitignore', 'dockerignore', 'editorconfig', 'lock', 'tsv']
 const DOCX_EXTENSIONS = ['docx']
 const SHEET_EXTENSIONS = ['xlsx', 'xls']
+// Compressed bundles: shown with a zip icon and never previewable —
+// there is nothing meaningful to render from raw archive bytes.
+const ARCHIVE_EXTENSIONS = ['zip', 'gz', 'tgz', 'tar', 'bz2', 'xz', 'zst', '7z', 'rar', 'jar', 'war']
 
 export function getAttachmentName(file) {
   return file?.name || file?.fileName || 'Untitled file'
@@ -25,6 +28,7 @@ export function getAttachmentPreviewType(file) {
   if (type.startsWith('image/') || (ext && IMAGE_EXTENSIONS.includes(ext))) return 'image'
   if (type === 'application/pdf' || ext === 'pdf') return 'pdf'
   if (type === 'text/csv' || ext === 'csv') return 'csv'
+  if (ext && ARCHIVE_EXTENSIONS.includes(ext)) return 'archive'
   if (ext && MARKDOWN_EXTENSIONS.includes(ext)) return 'markdown'
   if (ext && DOCX_EXTENSIONS.includes(ext)) return 'docx'
   if (type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return 'docx'
@@ -49,6 +53,7 @@ function getAttachmentTypeIcon(previewType) {
     code: FileCode,
     text: FileText,
     markdown: FileText,
+    archive: FileZip,
     file: File,
   }
 
@@ -158,7 +163,7 @@ export default memo(function AttachmentCard({
   const isUploaded = uploadStatus === 'uploaded'
   const hasStatus = isUploading || isErrored || isUploaded
   const isCompact = size === 'compact'
-  const canPreview = typeof onPreview === 'function' && !isUploading
+  const canPreview = typeof onPreview === 'function' && !isUploading && previewType !== 'archive'
   const rootClassName = useMemo(() => [
     styles.attachmentCard,
     size === 'compact' ? styles.attachmentCardCompact : '',
