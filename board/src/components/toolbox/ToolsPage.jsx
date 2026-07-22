@@ -9,7 +9,7 @@ const SKELETON_COUNT = 6
 
 export default function ToolsPage() {
   const { t } = useTranslation()
-  const { tools, loading, toggleTool } = useToolsModel()
+  const { tools, loading } = useToolsModel()
   const [search, setSearch] = useState('')
 
   const tp = t('toolbox') || {}
@@ -84,17 +84,9 @@ export default function ToolsPage() {
                     <IconWrench />
                   </div>
                   <span className={styles.cardName}>{tool.name}</span>
-                  <span className={styles.typeBadge}>{tool.type}</span>
                 </div>
-                <button
-                  className={`${styles.toggle} ${tool.enabled ? styles.toggleOn : ''}`}
-                  onClick={() => toggleTool(tool.id)}
-                  title={tool.enabled ? t('toolbox.disable') : t('toolbox.enable')}
-                >
-                  <span className={styles.toggleKnob} />
-                </button>
               </div>
-              <p className={styles.cardDesc}>{tool.description}</p>
+              {tool.description ? <p className={styles.cardDesc}>{tool.description}</p> : null}
             </div>
           ))
         )}

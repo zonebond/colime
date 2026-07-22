@@ -180,10 +180,44 @@ export async function toggleMcpServer(serverName) {
 
 // ─── Tools (/experimental/tool) ────────────────────────────────────────
 
+/**
+ * List the tools registered in ravens. The rich endpoint
+ * (GET /experimental/tool) returns id + description but requires a
+ * provider/model pair, so resolve the default one first; fall back to
+ * the bare id list when no provider is connected yet.
+ */
 export async function listTools() {
   try {
+    const provRes = await apiClient.get('/provider')
+    const providers = Array.isArray(provRes) ? provRes : provRes?.all ?? []
+    const active = providers.find((p) => p.connected) ?? providers[0]
+    const models = active?.models
+      ? (Array.isArray(active.models) ? active.models : Object.values(active.models))
+      : []
+    const model = models[0]
+    if (active?.id && model?.id) {
+      const params = new URLSearchParams({ provider: active.id, model: model.id })
+      const list = await apiClient.get(`/experimental/tool?${params.toString()}`)
+      if (Array.isArray(list) && list.length > 0) {
+        return list
+          // 'invalid' is ravens' internal error-reporting pseudo-tool
+          .filter((tool) => tool.id !== 'invalid')
+          .map((tool) => ({
+            id: tool.id,
+            name: tool.id,
+            description: tool.description || '',
+            enabled: true,
+          }))
+      }
+    }
+  } catch {
+    // fall through to the id-only listing
+  }
+  try {
     const ids = await apiClient.get('/experimental/tool/ids')
-    return Array.isArray(ids) ? ids.map((id) => ({ id, enabled: true })) : []
+    return Array.isArray(ids)
+      ? ids.filter((id) => id !== 'invalid').map((id) => ({ id, name: id, description: '', enabled: true }))
+      : []
   } catch {
     return []
   }
