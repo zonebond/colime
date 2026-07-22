@@ -63,7 +63,7 @@ export default function App() {
         <ErrorBoundary resetKey={location.pathname}>
         <Suspense fallback={<RouteFallback />}>
         <Routes>
-          <Route path="/" element={<Navigate to="/chats" replace />} />
+          <Route path="/" element={<Navigate to="/chats/new" replace />} />
           <Route path="/chats" element={<ChatsPage />} />
           <Route path="/chats/:chatId" element={<ChatPage />} />
 
