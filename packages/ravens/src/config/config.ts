@@ -287,6 +287,10 @@ export const Info = Schema.Struct({
       mcp_timeout: Schema.optional(PositiveInt).annotate({
         description: "Timeout in milliseconds for model context protocol (MCP) requests",
       }),
+      subagent_max_depth: Schema.optional(PositiveInt).annotate({
+        description:
+          "How deeply the task tool may nest subagents. Agents granted the 'task' permission can spawn task-capable subagents; this bounds that chain.",
+      }),
     }),
   ),
 }).annotate({ identifier: "Config" })

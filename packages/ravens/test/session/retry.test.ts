@@ -84,6 +84,65 @@ describe("session.retry.delay", () => {
     expect(SessionRetry.delay(1, error)).toBe(SessionRetry.RETRY_MAX_DELAY)
   })
 
+  test("jitter only ever adds to the requested wait", () => {
+    for (const base of [2000, 30000, 700000]) {
+      for (let i = 0; i < 200; i++) {
+        const spread = SessionRetry.jitter(base)
+        expect(spread).toBeGreaterThanOrEqual(base)
+        expect(spread).toBeLessThanOrEqual(base + SessionRetry.RETRY_JITTER_MAX)
+      }
+    }
+  })
+
+  test("jitter leaves a zero wait alone", () => {
+    expect(SessionRetry.jitter(0)).toBe(0)
+  })
+
+  test("jitter actually varies so retries do not fire in lockstep", () => {
+    const seen = new Set(Array.from({ length: 200 }, () => SessionRetry.jitter(30000)))
+    expect(seen.size).toBeGreaterThan(1)
+  })
+
+  it.live("policy stops retrying once the attempt limit is reached", () =>
+    provideTmpdirInstance(() =>
+      Effect.gen(function* () {
+        const sessionID = SessionID.make("session-retry-bounded")
+        const error = apiError({ "retry-after-ms": "0" })
+        const status = yield* SessionStatus.Service
+
+        const step = yield* Schedule.toStepWithMetadata(
+          SessionRetry.policy({
+            provider: "test",
+            parse: Schema.decodeUnknownSync(MessageV2.APIError.Schema),
+            set: (info) =>
+              status.set(sessionID, {
+                type: "retry",
+                attempt: info.attempt,
+                message: info.message,
+                next: info.next,
+              }),
+          }),
+        )
+
+        // The error stays retryable forever, so only the attempt ceiling can
+        // end this loop — the schedule signals that by failing with Done.
+        let scheduled = 0
+        for (let i = 0; i < SessionRetry.RETRY_MAX_ATTEMPTS + 5; i++) {
+          const exit = yield* Effect.exit(step(error))
+          if (exit._tag !== "Success") break
+          scheduled++
+        }
+        expect(scheduled).toBe(SessionRetry.RETRY_MAX_ATTEMPTS - 1)
+
+        const state = yield* status.get(sessionID)
+        expect(state).toMatchObject({ type: "retry" })
+        if (state?.type === "retry") {
+          expect(state.attempt).toBeLessThan(SessionRetry.RETRY_MAX_ATTEMPTS)
+        }
+      }),
+    ),
+  )
+
   it.live("policy updates retry status and increments attempts", () =>
     provideTmpdirInstance(() =>
       Effect.gen(function* () {
@@ -254,7 +313,7 @@ describe("session.retry.retryable", () => {
         reason: "free_tier_limit",
         provider: "ravens",
         title: "Free limit reached",
-        message: "Subscribe to OpenCode Go for reliable access to the best open-source models, starting at $5/month.",
+        message: "Subscribe to Ravens Go for reliable access to the best open-source models, starting at $5/month.",
         label: "subscribe",
         link: SessionRetry.GO_UPSELL_URL,
       },

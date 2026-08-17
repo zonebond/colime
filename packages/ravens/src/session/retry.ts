@@ -25,10 +25,33 @@ export type Retryable = {
 export const RETRY_INITIAL_DELAY = 2000
 export const RETRY_BACKOFF_FACTOR = 2
 export const RETRY_MAX_DELAY_NO_HEADERS = 30_000 // 30 seconds
-export const RETRY_MAX_DELAY = 2_147_483_647 // max 32-bit signed integer for setTimeout
+// Ceiling for a single wait. Providers occasionally report an absurd
+// `retry-after` — or an HTTP-date one that parses against a skewed clock —
+// and without a ceiling the session parks for days while the UI just spins.
+// Kept well above the longest legitimate provider hint we honour.
+export const RETRY_MAX_DELAY = 30 * 60_000 // 30 minutes
+// Total attempts before the error is surfaced. The schedule only stops on its
+// own when an error is classified non-retryable, so a provider that keeps
+// reporting a retryable failure would otherwise retry forever.
+export const RETRY_MAX_ATTEMPTS = 8
+// Upper bound on the random spread added to each wait.
+export const RETRY_JITTER_MAX = 2_000
 
 function cap(ms: number) {
   return Math.min(ms, RETRY_MAX_DELAY)
+}
+
+/**
+ * Spread out retries that would otherwise fire in lockstep.
+ *
+ * Sessions rate-limited by the same provider at the same moment all compute
+ * the same backoff, so without a spread they wake together and re-trigger the
+ * limit as a group. The offset is only ever additive — a wait the provider
+ * asked for explicitly must never be shortened.
+ */
+export function jitter(ms: number) {
+  if (ms <= 0) return ms
+  return Math.round(ms + Math.random() * Math.min(RETRY_JITTER_MAX, ms * 0.25))
 }
 
 export function delay(attempt: number, error?: MessageV2.APIError) {
@@ -182,8 +205,13 @@ export function policy(opts: {
       const error = opts.parse(meta.input)
       const retry = retryable(error, opts.provider)
       if (!retry) return Cause.done(meta.attempt)
+      // Bounded: surface the error instead of holding the session open
+      // indefinitely against a provider that keeps failing retryably.
+      if (meta.attempt >= RETRY_MAX_ATTEMPTS) return Cause.done(meta.attempt)
       return Effect.gen(function* () {
-        const wait = delay(meta.attempt, MessageV2.APIError.isInstance(error) ? error : undefined)
+        // `delay` stays a pure description of what the provider/backoff asks
+        // for; the spread and the ceiling belong to the scheduling layer.
+        const wait = cap(jitter(delay(meta.attempt, MessageV2.APIError.isInstance(error) ? error : undefined)))
         const now = yield* Clock.currentTimeMillis
         yield* opts.set({
           attempt: meta.attempt,

@@ -18,6 +18,19 @@ export interface TaskPromptOps {
 
 const id = "task"
 
+/**
+ * How deeply `task` may nest by default.
+ *
+ * A subagent normally can't call `task` at all — both the exposed toolset and
+ * `deriveSubagentSessionPermission` strip it unless the subagent's own agent
+ * ruleset grants the `task` permission. But an agent that *is* granted it
+ * (an orchestrator delegating to workers) can spawn subagents that are
+ * themselves task-capable, and delegating to itself then recurses without any
+ * ceiling. This bounds that chain; override with
+ * `experimental.subagent_max_depth`.
+ */
+const SUBAGENT_MAX_DEPTH = 3
+
 export const Parameters = Schema.Struct({
   description: Schema.String.annotate({ description: "A short (3-5 words) description of the task" }),
   prompt: Schema.String.annotate({ description: "The task for the agent to perform" }),
@@ -67,6 +80,26 @@ export const TaskTool = Tool.define(
       const parentAgent = parent.agent
         ? yield* agent.get(parent.agent).pipe(Effect.catchCause(() => Effect.succeed(undefined)))
         : undefined
+
+      // Walk the parent chain to find how deep this delegation already is.
+      // Stops as soon as the limit is reached — the exact depth beyond it
+      // doesn't matter, and a corrupt chain must not turn into a long walk.
+      const maxDepth = cfg.experimental?.subagent_max_depth ?? SUBAGENT_MAX_DEPTH
+      let depth = 0
+      let ancestor: typeof parent | undefined = parent
+      while (ancestor?.parentID && depth < maxDepth) {
+        depth++
+        ancestor = yield* sessions
+          .get(ancestor.parentID)
+          .pipe(Effect.catchCause(() => Effect.succeed(undefined)))
+      }
+      if (depth >= maxDepth) {
+        return yield* Effect.fail(
+          new Error(
+            `Subagent nesting limit reached (max depth ${maxDepth}). Complete this task directly instead of delegating it further.`,
+          ),
+        )
+      }
       const nextSession =
         session ??
         (yield* sessions.create({
