@@ -1,0 +1,243 @@
+.page {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--bg);
+  overflow: auto;
+  z-index: 100;
+}
+
+/* Soft warm bloom behind the card — gives the empty page a centre of
+   gravity without competing with the form. */
+.page::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(760px, 120vw);
+  height: min(760px, 120vw);
+  transform: translate(-50%, -58%);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--main-blue) 9%, transparent) 0%,
+    transparent 62%
+  );
+  pointer-events: none;
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  max-width: 372px;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  padding: 38px 34px 32px;
+  border: 1px solid var(--surface-border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--surface-shadow);
+  animation: rise 0.42s var(--ease-smooth) both;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px) scale(0.994); }
+  to { opacity: 1; transform: none; }
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+}
+
+/* The brand glyph ships as a black-filled SVG, so it's painted through a mask
+   instead of an <img>. That way it takes its colour from the theme tokens and
+   stays legible on every ground, not just the light one. */
+.mark {
+  width: 42px;
+  height: 42px;
+  display: block;
+  background: var(--txt1);
+  -webkit-mask: url('/favicon.svg') center / contain no-repeat;
+  mask: url('/favicon.svg') center / contain no-repeat;
+}
+
+.titleGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.brand {
+  font-family: var(--font-mono), monospace;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--txt3);
+}
+
+.title {
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--txt1);
+  line-height: 1.25;
+}
+
+.subtitle {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--txt2);
+  max-width: 30ch;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--txt2);
+}
+
+.inputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  width: 100%;
+  height: 42px;
+  padding: 0 40px 0 13px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--txt1);
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  outline: none;
+  transition: border-color 0.16s var(--ease-smooth), box-shadow 0.16s var(--ease-smooth),
+    background 0.16s var(--ease-smooth);
+}
+
+.input::placeholder { color: var(--txt3); }
+
+.input:hover:not(:focus) { border-color: var(--theme-soft-2); }
+
+.input:focus {
+  background: var(--surface);
+  border-color: color-mix(in srgb, var(--main-blue) 55%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--main-blue) 14%, transparent);
+}
+
+.inputError,
+.inputError:focus {
+  border-color: color-mix(in srgb, var(--danger) 55%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 12%, transparent);
+}
+
+.reveal {
+  position: absolute;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--txt3);
+  cursor: pointer;
+  transition: color 0.14s var(--ease-smooth), background 0.14s var(--ease-smooth);
+}
+
+.reveal:hover { color: var(--txt1); background: var(--hover); }
+.reveal:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--main-blue) 60%, transparent);
+  outline-offset: 1px;
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--danger);
+  animation: shake 0.32s var(--ease-smooth);
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  22% { transform: translateX(-4px); }
+  58% { transform: translateX(3px); }
+  82% { transform: translateX(-2px); }
+}
+
+.submit {
+  height: 42px;
+  margin-top: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--btn-text);
+  background: var(--theme-contrast);
+  border: none;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: opacity 0.16s var(--ease-smooth), transform 0.16s var(--ease-smooth);
+}
+
+.submit:hover:not(:disabled) { opacity: 0.88; }
+.submit:active:not(:disabled) { transform: scale(0.988); }
+.submit:disabled { opacity: 0.5; cursor: default; }
+.submit:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--main-blue) 60%, transparent);
+  outline-offset: 2px;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid color-mix(in srgb, var(--btn-text) 35%, transparent);
+  border-top-color: var(--btn-text);
+  border-radius: 50%;
+  animation: spin 0.66s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.hint {
+  text-align: center;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--txt3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card, .error { animation: none; }
+  .spinner { animation-duration: 1.6s; }
+  .submit:active:not(:disabled) { transform: none; }
+}

@@ -5,13 +5,14 @@ CERT_FILE="/etc/nginx/ssl/server.crt"
 KEY_FILE="/etc/nginx/ssl/server.key"
 NGINX_CONF="/etc/nginx/conf.d/default.conf"
 
+# Auth is enforced by the ravens runtime, which the board signs into through
+# its own page. nginx deliberately does NOT add basic auth: a
+# `www-authenticate` challenge makes the browser render its native credential
+# dialog, which is exactly what that page replaces. Only the static shell is
+# served unauthenticated, and it contains no secrets — every API call behind
+# /ravens/ still has to pass the runtime's check.
 if [ -n "${RAVENS_SERVER_PASSWORD:-}" ]; then
-    echo "==> RAVENS_SERVER_PASSWORD set, enabling basic auth..."
-    AUTH_USER="${RAVENS_SERVER_USERNAME:-ravens}"
-    printf '%s:%s\n' "$AUTH_USER" "$(openssl passwd -apr1 "$RAVENS_SERVER_PASSWORD")" > /etc/nginx/.htpasswd
-    chmod 600 /etc/nginx/.htpasswd
-    sed -i 's|# auth_basic |auth_basic |' "$NGINX_CONF"
-    sed -i 's|# auth_basic_user_file |auth_basic_user_file |' "$NGINX_CONF"
+    echo "==> RAVENS_SERVER_PASSWORD set — auth enforced by the runtime, sign-in handled in-app."
 else
     echo "==> WARNING: RAVENS_SERVER_PASSWORD not set — no client auth. Do not expose this port publicly."
 fi

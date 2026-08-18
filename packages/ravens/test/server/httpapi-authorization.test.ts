@@ -72,10 +72,47 @@ describe("HttpApi authorization middleware", () => {
       )
 
       expect(missing.status).toBe(401)
-      expect(missing.headers["www-authenticate"] ?? "").toContain("Basic")
       expect(badPassword.status).toBe(401)
-      expect(badPassword.headers["www-authenticate"] ?? "").toContain("Basic")
       expect(good.status).toBe(200)
+
+      // No Basic challenge on 401: it makes the browser pop its own native
+      // credential dialog, which the in-app sign-in page replaces. Clients
+      // that use Basic send the header proactively rather than waiting to be
+      // challenged, so nothing depends on it.
+      expect(missing.headers["www-authenticate"]).toBeUndefined()
+      expect(badPassword.headers["www-authenticate"]).toBeUndefined()
+    }),
+  )
+
+  itSecret.live("accepts the session cookie issued by the login endpoint", () =>
+    Effect.gen(function* () {
+      const config = { password: Option.some("secret"), username: "ravens" }
+      const valid = ServerAuth.sessionToken(config)
+
+      const [good, wrong, malformed] = yield* Effect.all(
+        [
+          getProbe({ cookie: `${ServerAuth.COOKIE_NAME}=${valid}` }),
+          getProbe({ cookie: `${ServerAuth.COOKIE_NAME}=not-the-token` }),
+          getProbe({ cookie: `unrelated=1; ${ServerAuth.COOKIE_NAME}=` }),
+        ],
+        { concurrency: "unbounded" },
+      )
+
+      // This is what makes SSE work under auth: EventSource can't set an
+      // Authorization header, but the browser does send cookies.
+      expect(good.status).toBe(200)
+      expect(wrong.status).toBe(401)
+      expect(malformed.status).toBe(401)
+    }),
+  )
+
+  itSecret.live("does not carry a session cookie across differing credentials", () =>
+    Effect.gen(function* () {
+      // A token minted for another password must not open this server — the
+      // token is derived from the configured credentials.
+      const otherToken = ServerAuth.sessionToken({ password: Option.some("other"), username: "ravens" })
+      const response = yield* getProbe({ cookie: `${ServerAuth.COOKIE_NAME}=${otherToken}` })
+      expect(response.status).toBe(401)
     }),
   )
 

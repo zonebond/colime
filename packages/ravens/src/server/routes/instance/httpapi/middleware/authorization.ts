@@ -1,13 +1,17 @@
 import { ServerAuth } from "@/server/auth"
+import { isAuthEndpoint } from "@/server/auth"
 import { Effect, Encoding, Layer, Redacted } from "effect"
-import { HttpEffect, HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http"
+import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http"
 import { HttpApiError, HttpApiMiddleware } from "effect/unstable/httpapi"
 import { hasPtyConnectTicketURL } from "@/server/shared/pty-ticket"
 import { isPublicUIPath } from "@/server/shared/public-ui"
 
 const AUTH_TOKEN_QUERY = "auth_token"
 const UNAUTHORIZED = 401
-const WWW_AUTHENTICATE = 'Basic realm="Secure Area"'
+// Deliberately no `www-authenticate` on 401s. Sending a Basic challenge makes
+// the browser render its own native credential dialog, which is exactly the
+// prompt the in-app login page replaces. Clients that authenticate with Basic
+// (CLI, TUI, SDK) send the header proactively and never rely on the challenge.
 
 // Avoid HttpApiSecurity alternatives here: Effect security middleware wraps the
 // full handler, so a downstream failure can make the next auth alternative run
@@ -34,9 +38,6 @@ function validateCredential<A, E, R>(
   return Effect.gen(function* () {
     if (!ServerAuth.required(config)) return yield* effect
     if (!ServerAuth.authorized(credential, config)) {
-      yield* HttpEffect.appendPreResponseHandler((_request, response) =>
-        Effect.succeed(HttpServerResponse.setHeader(response, "www-authenticate", WWW_AUTHENTICATE)),
-      )
       return yield* new HttpApiError.Unauthorized({})
     }
     return yield* effect
@@ -61,6 +62,23 @@ function decodeCredential(input: string) {
     )
 }
 
+/** Read the session cookie set by POST /auth/login. */
+function cookieToken(request: HttpServerRequest.HttpServerRequest) {
+  const raw = request.headers.cookie
+  if (!raw) return undefined
+  for (const part of raw.split(";")) {
+    const eq = part.indexOf("=")
+    if (eq < 0) continue
+    if (part.slice(0, eq).trim() !== ServerAuth.COOKIE_NAME) continue
+    return part.slice(eq + 1).trim()
+  }
+  return undefined
+}
+
+function hasSession(request: HttpServerRequest.HttpServerRequest, config: ServerAuth.Info) {
+  return ServerAuth.sessionTokenMatches(cookieToken(request), config)
+}
+
 function credentialFromRequest(request: HttpServerRequest.HttpServerRequest) {
   return credentialFromURL(new URL(request.url, "http://localhost"), request)
 }
@@ -80,12 +98,7 @@ function validateRawCredential<A, E, R>(
 ) {
   if (!ServerAuth.required(config)) return effect
   if (!ServerAuth.authorized(credential, config))
-    return Effect.succeed(
-      HttpServerResponse.empty({
-        status: UNAUTHORIZED,
-        headers: { "www-authenticate": WWW_AUTHENTICATE },
-      }),
-    )
+    return Effect.succeed(HttpServerResponse.empty({ status: UNAUTHORIZED }))
   return effect
 }
 
@@ -99,7 +112,9 @@ export const authorizationRouterMiddleware = HttpRouter.middleware()(
         const request = yield* HttpServerRequest.HttpServerRequest
         const url = new URL(request.url, "http://localhost")
         if (isPublicUIPath(request.method, url.pathname)) return yield* effect
+        if (isAuthEndpoint(url.pathname)) return yield* effect
         if (hasPtyConnectTicketURL(url)) return yield* effect
+        if (hasSession(request, config)) return yield* effect
         return yield* credentialFromURL(url, request).pipe(
           Effect.flatMap((credential) => validateRawCredential(effect, credential, config)),
         )
@@ -115,6 +130,7 @@ export const authorizationLayer = Layer.effect(
     return Authorization.of((effect) =>
       Effect.gen(function* () {
         const request = yield* HttpServerRequest.HttpServerRequest
+        if (hasSession(request, config)) return yield* effect
         return yield* credentialFromRequest(request).pipe(
           Effect.flatMap((credential) => validateCredential(effect, credential, config)),
         )

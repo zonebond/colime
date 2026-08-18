@@ -1,4 +1,18 @@
 export const en = {
+  auth: {
+    title: 'Welcome back',
+    subtitle: 'Enter your password to continue.',
+    password: 'Password',
+    passwordPlaceholder: '••••••••',
+    showPassword: 'Show password',
+    hidePassword: 'Hide password',
+    signIn: 'Sign in',
+    signingIn: 'Signing in…',
+    invalidPassword: 'Incorrect password',
+    requestFailed: 'Could not reach the server. Check that it is running.',
+    hint: 'Set by RAVENS_SERVER_PASSWORD on the server.',
+    signOut: 'Sign out',
+  },
   sidebar: {
     brand: 'RAVENS',
     newChat: 'New chat',

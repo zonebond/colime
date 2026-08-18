@@ -1,4 +1,18 @@
 export const zh = {
+  auth: {
+    title: '欢迎回来',
+    subtitle: '请输入密码以继续。',
+    password: '密码',
+    passwordPlaceholder: '••••••••',
+    showPassword: '显示密码',
+    hidePassword: '隐藏密码',
+    signIn: '登录',
+    signingIn: '正在登录…',
+    invalidPassword: '密码不正确',
+    requestFailed: '无法连接到服务器，请确认服务已启动。',
+    hint: '密码由服务端的 RAVENS_SERVER_PASSWORD 设置。',
+    signOut: '退出登录',
+  },
   sidebar: {
     brand: 'RAVENS',
     newChat: '新对话',

@@ -1,12 +1,15 @@
-import { Suspense, lazy, useEffect } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import ErrorBoundary from '@/components/common/ErrorBoundary'
+import LoginPage from '@/components/auth/LoginPage'
 import Sidebar from '@/components/sidebar/Sidebar'
 import ChatsPage from '@/components/chats/ChatsPage'
 
 import SearchModal from '@/components/search/SearchModal'
 import { useSidebar } from '@/hooks/useSidebar'
 import { useAppStore } from '@/store/useAppStore'
+import { getAuthStatus } from '@/features/auth/auth.service'
+import { onUnauthorized } from '@/lib/apiClient'
 import { setHighlightTheme } from '@/lib/highlight'
 import styles from './App.module.css'
 
@@ -33,6 +36,10 @@ function RouteFallback() {
 export default function App() {
   const location = useLocation()
   const hasHydrated = useAppStore((state) => state.hasHydrated)
+  // null = still checking; true/false = decided. Held here rather than in the
+  // store so a 401 from any request can flip the whole shell to the sign-in
+  // page without every page needing its own handling.
+  const [authed, setAuthed] = useState(null)
   const rawTheme = useAppStore((state) => state.theme)
   const searchModalOpen = useAppStore((state) => state.searchModalOpen)
   const openSearchModal = useAppStore((state) => state.openSearchModal)
@@ -42,6 +49,18 @@ export default function App() {
   useEffect(() => {
     setHighlightTheme(theme === 'dark')
   }, [theme])
+
+  useEffect(() => {
+    let cancelled = false
+    getAuthStatus().then((status) => {
+      if (!cancelled) setAuthed(Boolean(status?.authenticated))
+    })
+    return () => { cancelled = true }
+  }, [])
+
+  // Any 401 — an expired cookie, or the server restarting with a new
+  // password — sends the user back to sign in.
+  useEffect(() => onUnauthorized(() => setAuthed(false)), [])
 
   useEffect(() => {
     function handleKey(e) {
@@ -54,7 +73,15 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKey)
   }, [openSearchModal])
 
-  if (!hasHydrated) return null
+  if (!hasHydrated || authed === null) return null
+
+  if (!authed) {
+    return (
+      <div className={styles.layout} data-theme={theme}>
+        <LoginPage onAuthenticated={() => setAuthed(true)} />
+      </div>
+    )
+  }
 
   return (
     <div className={styles.layout} data-theme={theme}>

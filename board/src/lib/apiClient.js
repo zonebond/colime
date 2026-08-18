@@ -1,5 +1,21 @@
 import { runtimeConfig } from '@/config/runtime'
 
+// ─── Unauthorized notification ────────────────────────────────────────
+// Set by the app shell so a 401 anywhere can flip the UI to the sign-in
+// page. Kept as a plain callback to avoid a dependency on the store here.
+let unauthorizedHandler = null
+
+export function onUnauthorized(handler) {
+  unauthorizedHandler = handler
+  return () => {
+    if (unauthorizedHandler === handler) unauthorizedHandler = null
+  }
+}
+
+function notifyUnauthorized() {
+  unauthorizedHandler?.()
+}
+
 const CIRCUIT_STATES = {
   CLOSED: 'closed',
   OPEN: 'open',
@@ -157,6 +173,11 @@ async function request(path, options = {}) {
       const data = await parseResponse(response)
 
       if (!response.ok) {
+        // A 401 means the session cookie is missing or stale. Tell the app so
+        // it can show the sign-in page instead of surfacing a raw error on
+        // every panel that happens to be loading.
+        if (response.status === 401) notifyUnauthorized()
+
         const error = new Error(data?.message || response.statusText || 'Request failed')
         error.status = response.status
         error.data = data
