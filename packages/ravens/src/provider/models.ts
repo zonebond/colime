@@ -163,14 +163,28 @@ export const layer: Layer.Layer<Service, never, AppFileSystem.Service | HttpClie
       const snapshot = yield* loadSnapshot
       if (snapshot) return snapshot
       if (Flag.RAVENS_DISABLE_MODELS_FETCH) return {}
+      // models.dev being unreachable must not stop the server from booting.
+      // On a cold start with no cache file and no build-time snapshot this
+      // used to fall through to `orDie` and kill the process, so a transient
+      // network failure took the whole runtime down. Providers defined in
+      // config work without this catalog, and `refresh` retries hourly.
+      //
       // Flock is cross-process: concurrent ravens CLIs can race on this cache file.
-      const text = yield* Effect.scoped(
+      const catalog = yield* Effect.scoped(
         Effect.gen(function* () {
           yield* Flock.effect(lockKey)
-          return yield* fetchAndWrite()
+          const text = yield* fetchAndWrite()
+          return JSON.parse(text) as Record<string, Provider>
         }),
+      ).pipe(
+        Effect.tapCause((cause) =>
+          Effect.logError("Failed to fetch models.dev; starting without its model catalog").pipe(
+            Effect.annotateLogs("cause", cause),
+          ),
+        ),
+        Effect.catchCause(() => Effect.succeed(undefined)),
       )
-      return JSON.parse(text) as Record<string, Provider>
+      return catalog ?? {}
     }).pipe(Effect.withSpan("ModelsDev.populate"), Effect.orDie)
 
     const [cachedGet, invalidate] = yield* Effect.cachedInvalidateWithTTL(populate, Duration.infinity)
