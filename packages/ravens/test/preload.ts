@@ -33,7 +33,7 @@ process.env["XDG_DATA_HOME"] = path.join(dir, "share")
 process.env["XDG_CACHE_HOME"] = path.join(dir, "cache")
 process.env["XDG_CONFIG_HOME"] = path.join(dir, "config")
 process.env["XDG_STATE_HOME"] = path.join(dir, "state")
-process.env["RAVENS_MODELS_PATH"] = path.join(import.meta.dir, "tool", "fixtures", "models-api.json")
+process.env["RAVENS_MODELS_PATH"] = path.join(import.meta.dir, "..", "vendor", "models-dev.json")
 process.env["RAVENS_EXPERIMENTAL_EVENT_SYSTEM"] = "true"
 
 // Set test home directory to isolate tests from user's actual home directory

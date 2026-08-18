@@ -28,11 +28,10 @@ COPY packages/ui/ packages/ui/
 
 RUN bun install --ignore-scripts --frozen-lockfile --registry https://registry.npmmirror.com
 
-# Bake a models.dev snapshot into the image so a cold start doesn't depend on
-# models.dev being reachable. Deliberately non-fatal: without the snapshot the
-# runtime still boots and fetches the catalog later.
-RUN bun run packages/ravens/script/generate.ts \
-    || echo "models.dev snapshot unavailable at build time; runtime will fetch it at startup"
+# Bake the model catalog into the image from the vendored copy in the repo.
+# No network involved, so this works in an air-gapped build and the resulting
+# image has full model metadata without ever contacting models.dev.
+RUN bun run packages/ravens/script/generate.ts
 
 RUN mkdir -p /app/config
 

@@ -20,6 +20,8 @@ import { testEffect } from "../lib/effect"
 import { Reference } from "@/reference/reference"
 
 const FIXTURES_DIR = path.join(import.meta.dir, "fixtures")
+// The vendored models.dev catalog doubles as a conveniently large JSON file.
+const LARGE_JSON = path.join(import.meta.dir, "..", "..", "vendor", "models-dev.json")
 
 afterEach(async () => {
   await disposeAllInstances()
@@ -358,7 +360,7 @@ describe("tool.read truncation", () => {
   it.instance("truncates large file by bytes and sets truncated metadata", () =>
     Effect.gen(function* () {
       const test = yield* TestInstance
-      const base = yield* load(path.join(FIXTURES_DIR, "models-api.json"))
+      const base = yield* load(LARGE_JSON)
       const target = 60 * 1024
       const content = base.length >= target ? base : base.repeat(Math.ceil(target / base.length))
       yield* put(path.join(test.directory, "large.json"), content)

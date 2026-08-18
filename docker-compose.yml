@@ -8,6 +8,10 @@ services:
       # Required — set it in .env or the shell; there is deliberately no default.
       - RAVENS_SERVER_PASSWORD=${RAVENS_SERVER_PASSWORD:?RAVENS_SERVER_PASSWORD must be set}
       - RAVENS_SERVER_USERNAME=${RAVENS_SERVER_USERNAME:-ravens}
+      # Offline by default: the image already carries the full model catalog,
+      # baked in at build time, so there is nothing to fetch. Set to 0 only if
+      # you want the runtime to pull catalog updates from models.dev.
+      - RAVENS_DISABLE_MODELS_FETCH=${RAVENS_DISABLE_MODELS_FETCH:-1}
     volumes:
       - ./data/runtime-config:/app/config
       - ./data/runtime-data:/root/.local/share/ravens

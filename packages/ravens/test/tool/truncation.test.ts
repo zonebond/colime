@@ -12,6 +12,8 @@ import { writeFileStringScoped } from "../lib/filesystem"
 import { TestConfig } from "../fixture/config"
 
 const FIXTURES_DIR = path.join(import.meta.dir, "fixtures")
+// The vendored models.dev catalog doubles as a conveniently large JSON file.
+const LARGE_JSON = path.join(import.meta.dir, "..", "..", "vendor", "models-dev.json")
 const ROOT = path.resolve(import.meta.dir, "..", "..")
 
 const it = testEffect(Layer.mergeAll(Truncate.defaultLayer, NodeFileSystem.layer))
@@ -25,7 +27,7 @@ describe("Truncate", () => {
     it.live("truncates large json file by bytes", () =>
       Effect.gen(function* () {
         const svc = yield* Truncate.Service
-        const content = yield* Effect.promise(() => Filesystem.readText(path.join(FIXTURES_DIR, "models-api.json")))
+        const content = yield* Effect.promise(() => Filesystem.readText(LARGE_JSON))
         const result = yield* svc.output(content)
 
         expect(result.truncated).toBe(true)
@@ -158,7 +160,7 @@ describe("Truncate", () => {
     it.live("large single-line file truncates with byte message", () =>
       Effect.gen(function* () {
         const svc = yield* Truncate.Service
-        const content = yield* Effect.promise(() => Filesystem.readText(path.join(FIXTURES_DIR, "models-api.json")))
+        const content = yield* Effect.promise(() => Filesystem.readText(LARGE_JSON))
         const result = yield* svc.output(content)
 
         expect(result.truncated).toBe(true)
